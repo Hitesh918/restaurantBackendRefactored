@@ -17,6 +17,7 @@ const restaurantMenuRouter = require('./restaurant-menu.routes');
 const restaurantCRMRouter = require('./restaurant-crm.routes');
 const userRouter = require('./user.routes');
 const customerInquiryRouter = require('./customer-inquiry.routes');
+const inquiryRouter = require('./inquiry.routes');
 
 const v1Router = express.Router();
 
@@ -37,5 +38,6 @@ v1Router.use('/restaurant/menu', restaurantMenuRouter);
 v1Router.use('/restaurant/crm', restaurantCRMRouter);
 v1Router.use('/users', userRouter);
 v1Router.use('/customers', customerInquiryRouter);
+v1Router.use('/inquiries', inquiryRouter);
 
 module.exports = v1Router;

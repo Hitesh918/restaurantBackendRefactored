@@ -110,6 +110,19 @@ class InquiryRepository {
         }
     }
 
+    async findByCustomerEmail(email) {
+        try {
+            return await Inquiry.find({ email })
+                .populate('restaurantId', 'restaurantName address geo rating')
+                .populate('respondedBy', 'fullName email')
+                .sort({ createdAt: -1 })
+                .lean();
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
     async getStatusCounts(restaurantId) {
         try {
             const counts = await Inquiry.aggregate([

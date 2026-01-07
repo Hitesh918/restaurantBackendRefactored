@@ -9,10 +9,15 @@ const inquiryService = new InquiryService(inquiryRepository, restaurantRepositor
 
 /**
  * POST /restaurant/inquiries
- * Create a new inquiry (public endpoint, no auth required)
+ * Create a new inquiry (public endpoint, but can accept auth to link to customer)
  */
 async function createInquiry(req, res, next) {
     try {
+        // If user is authenticated and is a Customer, set customerId from their User _id
+        if (req.user && req.user.role === 'Customer' && req.user.userId) {
+            req.body.customerId = req.user.userId;
+        }
+        
         const result = await inquiryService.createInquiry(req.body);
         return res.status(StatusCodes.CREATED).json({
             success: true,

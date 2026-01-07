@@ -27,7 +27,7 @@ router.get('/:customerId/inquiries', authenticate, async (req, res, next) => {
         const inquiryRepository = new InquiryRepository();
         const customerRepository = new CustomerRepository();
         
-        // Get the customer to find the userId
+        // Get the customer to find the userId and email
         const customer = await customerRepository.findById(customerId);
         if (!customer) {
             return res.status(404).json({
@@ -39,7 +39,18 @@ router.get('/:customerId/inquiries', authenticate, async (req, res, next) => {
         }
 
         // Get inquiries where customerId (User reference) matches the customer's userId
-        const inquiries = await inquiryRepository.findByCustomerId(customer.userId);
+        // Also get inquiries by email as fallback (for inquiries created before login)
+        const [inquiriesByUserId, inquiriesByEmail] = await Promise.all([
+            inquiryRepository.findByCustomerId(customer.userId),
+            inquiryRepository.findByCustomerEmail(customer.email)
+        ]);
+
+        // Combine and deduplicate inquiries
+        const inquiryMap = new Map();
+        [...inquiriesByUserId, ...inquiriesByEmail].forEach(inquiry => {
+            inquiryMap.set(inquiry._id.toString(), inquiry);
+        });
+        const inquiries = Array.from(inquiryMap.values());
         
         return res.status(200).json({
             success: true,
