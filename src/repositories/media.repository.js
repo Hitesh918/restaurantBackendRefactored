@@ -1,4 +1,4 @@
-const { Media } = require('../models');
+const Media = require('../models/media.model');
 
 class MediaRepository {
     async create(data) {
@@ -40,6 +40,22 @@ class MediaRepository {
 
     async deleteByOwner(ownerType, ownerId) {
         return await Media.deleteMany({ ownerType, ownerId });
+    }
+
+    async findById(id) {
+        return await Media.findById(id);
+    }
+
+    async findByCategory(ownerType, ownerId, category) {
+        return await Media.find({ ownerType, ownerId, category }).sort({ createdAt: -1 });
+    }
+
+    async update(id, updateData) {
+        return await Media.findByIdAndUpdate(id, updateData, { new: true });
+    }
+
+    async delete(id) {
+        return await Media.findByIdAndDelete(id);
     }
 }
 

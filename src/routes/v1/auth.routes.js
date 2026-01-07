@@ -1,15 +1,17 @@
 const express = require('express');
 const { AuthController } = require('../../controllers');
+const { validateLogin, validateSignup } = require('../../middleware/validation.middleware');
+const { authenticate } = require('../../middleware/auth.middleware');
 
 const authRouter = express.Router();
 
 // Unified signup for all roles
-authRouter.post('/signup', AuthController.signup);
+authRouter.post('/signup', validateSignup, AuthController.signup);
 
 // Login
-authRouter.post('/login', AuthController.login);
+authRouter.post('/login', validateLogin, AuthController.login);
 
-// Password management
-authRouter.post('/update-password', AuthController.updatePassword);
+// Password management (requires authentication)
+authRouter.post('/update-password', authenticate, AuthController.updatePassword);
 
 module.exports = authRouter;

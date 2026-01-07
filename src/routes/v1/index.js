@@ -6,6 +6,17 @@ const customerRouter = require('./customer.routes');
 const restaurantRouter = require('./restaurant.routes');
 const bookingRouter = require('./booking.routes');
 const eventRouter = require('./event.routes');
+const cuisineRouter = require('./cuisine.routes');
+const uploadRouter = require('./upload.routes');
+const spaceRouter = require('./space.routes');
+const restaurantSpaceRouter = require('./restaurant-space.routes');
+const restaurantBookingRouter = require('./restaurant-booking.routes');
+const restaurantInquiryRouter = require('./restaurant-inquiry.routes');
+const restaurantGalleryRouter = require('./restaurant-gallery.routes');
+const restaurantMenuRouter = require('./restaurant-menu.routes');
+const restaurantCRMRouter = require('./restaurant-crm.routes');
+const userRouter = require('./user.routes');
+const customerInquiryRouter = require('./customer-inquiry.routes');
 
 const v1Router = express.Router();
 
@@ -15,5 +26,16 @@ v1Router.use('/customers', customerRouter);
 v1Router.use('/restaurants', restaurantRouter);
 v1Router.use('/bookings', bookingRouter);
 v1Router.use('/events', eventRouter);
+v1Router.use('/cuisines', cuisineRouter);
+v1Router.use('/upload', uploadRouter);
+v1Router.use('/spaces', spaceRouter);
+v1Router.use('/restaurant/spaces', restaurantSpaceRouter);
+v1Router.use('/restaurant/bookings', restaurantBookingRouter);
+v1Router.use('/restaurant/inquiries', restaurantInquiryRouter);
+v1Router.use('/restaurant/gallery', restaurantGalleryRouter);
+v1Router.use('/restaurant/menu', restaurantMenuRouter);
+v1Router.use('/restaurant/crm', restaurantCRMRouter);
+v1Router.use('/users', userRouter);
+v1Router.use('/customers', customerInquiryRouter);
 
 module.exports = v1Router;

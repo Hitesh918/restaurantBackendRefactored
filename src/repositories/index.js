@@ -10,5 +10,6 @@ module.exports = {
     MediaRepository: require('./media.repository'),
     AvailabilityBlockRepository: require('./availabilityBlock.repository'),
     EventRepository: require('./event.repository'),
-    ReviewRepository: require('./review.repository')
+    ReviewRepository: require('./review.repository'),
+    InquiryRepository: require('./inquiry.repository')
 }

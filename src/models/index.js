@@ -10,5 +10,8 @@ module.exports = {
     BookingMessage: require('./bookingMessage.model'),
     Event: require('./event.model'),
     Review: require('./review.model'),
-    Media: require('./media.model')
+    Media: require('./media.model'),
+    Cuisine: require('./cuisine.model'),
+    Inquiry: require('./inquiry.model'),
+    SavedSpace: require('./savedSpace.model')
 }

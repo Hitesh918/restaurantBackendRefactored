@@ -1,27 +1,32 @@
 const express = require('express');
 const { RestaurantController } = require('../../controllers');
 const AvailabilityController = require('../../controllers/availability.controller');
+const { authenticate, authorize } = require('../../middleware/auth.middleware');
 
 const router = express.Router();
 
+// Public routes
 // Search restaurants
 router.get('/search', RestaurantController.search);
+// Get restaurant public profile (no auth required)
+router.get('/:id/public', RestaurantController.getPublicProfile);
 
-// Create new restaurant listing
-router.post('/', RestaurantController.createRestaurant);
+// Admin routes (require authentication and admin role)
+// Must be before /:id routes to avoid route conflicts
+router.get('/', authenticate, authorize('Admin'), RestaurantController.getAllRestaurants);
+router.delete('/:id', authenticate, authorize('Admin'), RestaurantController.deleteRestaurant);
 
-// Profile routes
-router.get('/:id/profile', RestaurantController.getProfile);
-router.put('/:id/profile', RestaurantController.updateProfile);
+// Create new restaurant listing (requires authentication)
+router.post('/', authenticate, RestaurantController.createRestaurant);
 
-// Availability APIs
-router.get('/:restaurantId/availability', AvailabilityController.checkAvailability);
-router.get('/:restaurantId/availability/blocks', AvailabilityController.getBlocks);
-router.post('/:restaurantId/availability/blocks', AvailabilityController.createBlock);
-router.delete('/:restaurantId/availability/blocks/:blockId', AvailabilityController.deleteBlock);
+// Profile routes (requires authentication)
+router.get('/:id/profile', authenticate, RestaurantController.getProfile);
+router.put('/:id/profile', authenticate, RestaurantController.updateProfile);
 
-// Admin routes
-router.get('/', RestaurantController.getAllRestaurants);
-router.delete('/:id', RestaurantController.deleteRestaurant);
+// Availability APIs (requires authentication)
+router.get('/:restaurantId/availability', authenticate, AvailabilityController.checkAvailability);
+router.get('/:restaurantId/availability/blocks', authenticate, AvailabilityController.getBlocks);
+router.post('/:restaurantId/availability/blocks', authenticate, AvailabilityController.createBlock);
+router.delete('/:restaurantId/availability/blocks/:blockId', authenticate, AvailabilityController.deleteBlock);
 
 module.exports = router;

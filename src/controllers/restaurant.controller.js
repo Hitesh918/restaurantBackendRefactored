@@ -52,6 +52,29 @@ async function getProfile(req, res, next) {
     }
 }
 
+async function getPublicProfile(req, res, next) {
+    try {
+        const profile = await restaurantService.getProfile(req.params.id);
+        // Only return active restaurants for public view
+        if (profile.listingStatus !== 'active') {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: 'Restaurant not found',
+                error: {},
+                data: null
+            });
+        }
+        return res.status(StatusCodes.OK).json({
+            success: true,
+            message: 'Successfully fetched restaurant profile',
+            error: {},
+            data: profile
+        });
+    } catch(error) {
+        next(error);
+    }
+}
+
 async function updateProfile(req, res, next) {
     try {
         const updated = await restaurantService.updateProfile(req.params.id, req.body);
@@ -98,6 +121,7 @@ module.exports = {
     search,
     createRestaurant,
     getProfile,
+    getPublicProfile,
     updateProfile,
     getAllRestaurants,
     deleteRestaurant

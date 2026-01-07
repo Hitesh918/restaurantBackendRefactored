@@ -20,6 +20,31 @@ const restaurantSpaceSchema = new mongoose.Schema(
     },
 
     features: [String],
+
+    // Pricing fields
+    pricing: {
+      minimumSpend: { type: Number },
+      pricePerPerson: { type: Number },
+      buyoutCost: { type: Number },
+      currency: { type: String, default: "USD" },
+      depositRequired: { type: Number },
+      cancellationPolicy: { type: String },
+    },
+
+    // Contract fields
+    contracts: [{
+      name: { type: String, required: true },
+      documentUrl: { type: String, required: true },
+      documentType: { 
+        type: String, 
+        enum: ["terms", "contract", "agreement", "policy", "other"],
+        default: "contract"
+      },
+      isActive: { type: Boolean, default: true },
+      effectiveDate: { type: Date },
+      expiryDate: { type: Date },
+      description: { type: String },
+    }],
   },
   { timestamps: true }
 );

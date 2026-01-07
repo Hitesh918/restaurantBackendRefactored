@@ -34,6 +34,14 @@ const restaurantSchema = new mongoose.Schema({
     rating: { type: Number, default: 0, min: 0, max: 5 },
     reviewCount: { type: Number, default: 0 },
     pricePerPlate: { type: Number }, // average price per person
+    certificateCode: { type: String },
+    showRadius: { type: Number }, // radius in km
+    popularDishes: { type: String },
+    monThuOffer: { type: String },
+    monThuOfferDescription: { type: String },
+    friSunOffer: { type: String },
+    friSunOfferDescription: { type: String },
+    tableBookingEnabled: { type: Boolean, default: true },
 
     openingHours: {
       monday: { open: String, close: String },

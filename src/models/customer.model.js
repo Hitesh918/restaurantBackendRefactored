@@ -9,11 +9,11 @@ const customerSchema = new mongoose.Schema({
     },
     profilePhotoUrl: { 
         type: String, 
-        required: [true, 'Profile photo URL is required'] 
+        default: '' 
     },
     profileDescription: { 
         type: String, 
-        required: [true, 'Profile description is required'] 
+        default: '' 
     },
     name: {
         type: String,

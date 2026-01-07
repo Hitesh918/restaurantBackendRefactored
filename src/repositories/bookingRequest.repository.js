@@ -15,7 +15,7 @@ class BookingRequestRepository {
 
     async findByRestaurantId(restaurantId) {
         return await BookingRequest.find({ restaurantId })
-            .populate('customerId', 'name email phone')
+            .populate('customerId', 'name email phone companyName')
             .populate('spaceId', 'name')
             .sort({ createdAt: -1 })
             .lean();
@@ -27,7 +27,6 @@ class BookingRequestRepository {
 
         const bookings = await BookingRequest.find({ restaurantId })
             .populate('customerId', 'name email phone')
-            .populate('customerUserId', 'name email phone') // Legacy field support
             .populate('spaceId', 'name')
             .sort({ eventDate: -1 })
             .lean();
@@ -40,8 +39,7 @@ class BookingRequestRepository {
         };
 
         for (const booking of bookings) {
-            // Handle both old (customerUserId) and new (customerId) field names
-            const customer = booking.customerId || booking.customerUserId;
+            const customer = booking.customerId;
             
             const formatted = {
                 _id: booking._id,
@@ -93,10 +91,8 @@ class BookingRequestRepository {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Query both customerId (new) and customerUserId (legacy) for backward compatibility
-        const bookings = await BookingRequest.find({ 
-            $or: [{ customerId }, { customerUserId: customerId }] 
-        })
+        // Query by customerId
+        const bookings = await BookingRequest.find({ customerId })
             .populate('restaurantId', 'restaurantName')
             .populate('spaceId', 'name')
             .sort({ eventDate: -1 })

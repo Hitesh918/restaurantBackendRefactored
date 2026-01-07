@@ -30,8 +30,21 @@ const media = new mongoose.Schema(
         "outdoor",
         "floorplan",
         "menu",
+        "gallery",
       ],
       required: true,
+    },
+    
+    // Additional metadata for gallery items
+    title: {
+      type: String,
+      default: '',
+    },
+    
+    status: {
+      type: String,
+      enum: ['Publish', 'Draft'],
+      default: 'Draft',
     },
 
     url: { type: String, required: true },

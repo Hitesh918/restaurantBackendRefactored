@@ -20,25 +20,26 @@ class AuthService {
             throw new BaseError('email, password, role, and fullName are required', 400);
         }
 
+        // Normalize email
+        const normalizedEmail = userData.email.toLowerCase().trim();
+        userData.email = normalizedEmail;
+
         const role = userData.role.toLowerCase();
         if (!['customer', 'restaurant', 'admin'].includes(role)) {
             throw new BaseError('role must be customer, restaurant, or admin', 400);
         }
 
         // Check if user already exists
-        const existingUser = await this.userRepository.findByEmail(userData.email);
+        const existingUser = await this.userRepository.findByEmail(normalizedEmail);
         if (existingUser) {
             throw new BaseError('User with this email already exists', 409);
         }
 
         // Role-specific validation
         if (role === 'customer') {
-            if (!userData.profilePhotoUrl) {
-                throw new BaseError('profilePhotoUrl is required for customer signup', 400);
-            }
-            if (!userData.profileDescription) {
-                throw new BaseError('profileDescription is required for customer signup', 400);
-            }
+            // profilePhotoUrl is optional - can be empty string or base64 data URL
+            // profileDescription is optional - can be empty string
+            // Both will be stored as provided (empty strings are allowed)
         }
 
         // Create user
@@ -46,12 +47,12 @@ class AuthService {
         const normalizedRole = role.charAt(0).toUpperCase() + role.slice(1); // Customer, Restaurant, Admin
 
         const createdUser = await this.userRepository.createUser({
-            email: userData.email,
+            email: normalizedEmail,
             password: hashedPassword,
             role: normalizedRole,
-            fullName: userData.fullName,
-            phone: userData.phone,
-            companyName: userData.companyName
+            fullName: userData.fullName.trim(),
+            phone: userData.phone?.trim() || '',
+            companyName: userData.companyName?.trim() || ''
         });
 
         let profileId = null;
@@ -104,14 +105,17 @@ class AuthService {
      * Login with subscription info for restaurants
      */
     async login(email, password) {
-        const user = await this.userRepository.findByEmail(email);
+        // Normalize email to lowercase
+        const normalizedEmail = email.toLowerCase().trim();
+        
+        const user = await this.userRepository.findByEmail(normalizedEmail);
         if (!user) {
-            throw new BaseError('User not found', 404);
+            throw new BaseError('Invalid email or password', 401, 'AUTH_INVALID_CREDENTIALS');
         }
 
         const isPasswordValid = await comparePassword(password, user.password);
         if (!isPasswordValid) {
-            throw new BaseError('Invalid password', 401, 'AUTH_INVALID_PASSWORD', { email });
+            throw new BaseError('Invalid email or password', 401, 'AUTH_INVALID_CREDENTIALS');
         }
 
         let id = null;
@@ -155,11 +159,22 @@ class AuthService {
             throw new BaseError('Profile not found', 404);
         }
 
-        const token = generateToken({
+        // For Restaurant role, store both restaurant._id (as id) and user._id (as userId)
+        // For other roles, userId is the same as id
+        const tokenPayload = {
             id,
             email: user.email,
             role: user.role
-        });
+        };
+        
+        // Add userId for restaurant lookups (needed to find restaurant by userId field)
+        if (user.role === 'Restaurant') {
+            tokenPayload.userId = user._id;
+        } else {
+            tokenPayload.userId = id; // For non-restaurant, userId is same as id
+        }
+
+        const token = generateToken(tokenPayload);
 
         const response = {
             token,
@@ -169,6 +184,14 @@ class AuthService {
             fullName: user.fullName,
             profileComplete
         };
+
+        // Include customerId for customer role
+        if (user.role === 'Customer') {
+            const customer = await this.customerRepository.findByUserId(user._id);
+            if (customer) {
+                response.customerId = customer._id;
+            }
+        }
 
         // Include subscription for restaurant
         if (user.role === 'Restaurant') {

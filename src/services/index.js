@@ -5,5 +5,8 @@ module.exports = {
     RestaurantService: require('./restaurant.service'),
     BookingService: require('./booking.service'),
     AvailabilityService: require('./availability.service'),
-    EventService: require('./event.service')
+    EventService: require('./event.service'),
+    CuisineService: require('./cuisine.service'),
+    SpaceService: require('./space.service'),
+    UserService: require('./user.service')
 }

@@ -1,4 +1,4 @@
-const { Event } = require('../models');
+const Event = require('../models/event.model');
 
 class EventRepository {
     async create(data) {

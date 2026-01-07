@@ -1,4 +1,4 @@
-const { Review } = require('../models');
+const Review = require('../models/review.model');
 
 class ReviewRepository {
     async create(data) {
@@ -32,9 +32,17 @@ class ReviewRepository {
                 populate: {
                     path: 'bookingRequestId',
                     match: { restaurantId },
-                    select: 'restaurantId'
+                    populate: [
+                        { path: 'restaurantId', select: 'restaurantName' },
+                        { path: 'spaceId', select: 'name' }
+                    ]
                 }
             })
+            .populate('reviewerId', 'name email phone companyName');
+    }
+
+    async findByEventIds(eventIds) {
+        return await Review.find({ eventId: { $in: eventIds } })
             .populate('reviewerId', 'name email');
     }
 

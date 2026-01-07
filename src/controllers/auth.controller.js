@@ -55,19 +55,32 @@ async function login(req, res, next) {
 
 /**
  * POST /auth/update-password
+ * Requires authentication - user can only update their own password
  */
 async function updatePassword(req, res, next) {
     try {
-        const { email, newPassword } = req.body;
-        if (!email || !newPassword) {
+        const { newPassword } = req.body;
+        const userEmail = req.user?.email; // Get email from authenticated user
+        
+        if (!newPassword) {
             return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
-                message: 'email and newPassword are required',
-                error: {},
+                message: 'newPassword is required',
+                error: { required: ['newPassword'] },
                 data: null
             });
         }
-        const result = await authService.updatePassword(email, newPassword);
+
+        if (newPassword.length < 6) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: 'Password must be at least 6 characters long',
+                error: { field: 'newPassword' },
+                data: null
+            });
+        }
+
+        const result = await authService.updatePassword(userEmail, newPassword);
         return res.status(StatusCodes.OK).json({
             success: true,
             message: 'Successfully updated password',

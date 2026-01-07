@@ -1,9 +1,13 @@
 const express = require('express');
 const { PlanController } = require('../../controllers');
+const { authenticate, authorize } = require('../../middleware/auth.middleware');
 
 const planRouter = express.Router();
 
-// Plan CRUD (Admin)
+// Plan CRUD (Admin only)
+planRouter.use(authenticate);
+planRouter.use(authorize('Admin'));
+
 planRouter.post('/', PlanController.addPlan);
 planRouter.get('/', PlanController.getPlans);
 planRouter.get('/active', PlanController.getActivePlans);

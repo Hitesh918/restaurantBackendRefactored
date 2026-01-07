@@ -28,7 +28,7 @@ class RestaurantService {
             categoryTags
         } = query;
 
-        // Step 1: Find spaces that match capacity and seating type
+        // Step 1: Find spaces that match capacity and seating type (if guestCount is provided)
         const seatingTypesArray = seatingTypes ? seatingTypes.split(',') : null;
         
         // Get blocked space IDs for the date/time (with 30min buffer)
@@ -43,19 +43,36 @@ class RestaurantService {
             );
         }
 
-        // Find available spaces matching criteria
-        const matchingSpaces = await this.restaurantSpaceRepository.searchByCapacityAndStyle(
-            parseInt(guestCount),
-            seatingTypesArray,
-            blockedSpaceIds
-        );
+        // Filter by capacity and/or seating types
+        let restaurantIdsWithCapacity = [];
+        const guestCountNum = guestCount ? parseInt(guestCount) : null;
+        const hasSeatingTypesFilter = seatingTypesArray && seatingTypesArray.length > 0;
+        const hasGuestCountFilter = guestCountNum && !isNaN(guestCountNum) && guestCountNum > 0;
+        
+        // If we have seating types filter OR guest count, we need to filter spaces
+        if (hasSeatingTypesFilter || hasGuestCountFilter) {
+            // Find available spaces matching criteria
+            const matchingSpaces = await this.restaurantSpaceRepository.searchByCapacityAndStyle(
+                guestCountNum,
+                seatingTypesArray,
+                blockedSpaceIds
+            );
 
-        // Get unique restaurant IDs from matching spaces
-        const restaurantIdsWithCapacity = [...new Set(matchingSpaces.map(s => s.restaurantId.toString()))];
+            // Get unique restaurant IDs from matching spaces
+            restaurantIdsWithCapacity = [...new Set(matchingSpaces.map(s => s.restaurantId.toString()))];
 
-        if (restaurantIdsWithCapacity.length === 0) {
-            return [];
+            // If no spaces match the criteria, return empty
+            if (restaurantIdsWithCapacity.length === 0) {
+                return [];
+            }
+        } else if (blockedSpaceIds.length > 0) {
+            // If no guestCount and no seating types but we have blocked spaces, get all available spaces
+            const allSpaces = await this.restaurantSpaceRepository.findAll();
+            const blockedSpaceIdsSet = new Set(blockedSpaceIds.map(id => id.toString()));
+            const availableSpaces = allSpaces.filter(s => !blockedSpaceIdsSet.has(s._id.toString()));
+            restaurantIdsWithCapacity = [...new Set(availableSpaces.map(s => s.restaurantId.toString()))];
         }
+        // If no guestCount, no seating types, and no blocked spaces, restaurantIdsWithCapacity stays empty (show all restaurants)
 
         // Step 2: Search restaurants with filters
         const cuisinesArray = cuisines ? cuisines.split(',') : null;
@@ -72,10 +89,15 @@ class RestaurantService {
             budgetMax
         });
 
-        // Filter to only restaurants that have matching spaces
-        const filteredRestaurants = restaurants.filter(r => 
-            restaurantIdsWithCapacity.includes(r._id.toString())
-        );
+        // Filter to only restaurants that have matching spaces (if capacity filtering was applied)
+        let filteredRestaurants = restaurants;
+        if (restaurantIdsWithCapacity.length > 0) {
+            // If we filtered by capacity or blocked spaces, only show matching restaurants
+            filteredRestaurants = restaurants.filter(r => 
+                restaurantIdsWithCapacity.includes(r._id.toString())
+            );
+        }
+        // If no capacity filtering, show all restaurants that match other filters
 
         // Step 3: Get hero images and capacity ranges
         const restaurantIds = filteredRestaurants.map(r => r._id);
@@ -127,6 +149,7 @@ class RestaurantService {
             ownerName: data.ownerName,
             businessEmail: data.businessEmail,
             phone: data.phone,
+            shortDescription: data.shortDescription,
             address: {
                 line1: data.addressLine1,
                 area: data.area,
@@ -142,7 +165,17 @@ class RestaurantService {
             cuisines: data.cuisines,
             features: data.features || [],
             openingHours: data.openingHours || {},
-            listingStatus: data.listingStatus || 'draft'
+            listingStatus: data.listingStatus || 'draft',
+            rating: data.rating ? parseFloat(data.rating) : 0,
+            pricePerPlate: data.pricePerPlate ? parseFloat(data.pricePerPlate) : undefined,
+            certificateCode: data.certificateCode,
+            showRadius: data.showRadius ? parseFloat(data.showRadius) : undefined,
+            popularDishes: data.popularDishes,
+            monThuOffer: data.monThuOffer,
+            monThuOfferDescription: data.monThuOfferDescription,
+            friSunOffer: data.friSunOffer,
+            friSunOfferDescription: data.friSunOfferDescription,
+            tableBookingEnabled: data.tableBookingEnabled !== undefined ? data.tableBookingEnabled : true
         });
 
         // Create default space with capacity and seating types
@@ -221,9 +254,20 @@ class RestaurantService {
             features: restaurant.features,
             openingHours: restaurant.openingHours,
             listingStatus: restaurant.listingStatus,
+            rating: restaurant.rating,
+            pricePerPlate: restaurant.pricePerPlate,
+            certificateCode: restaurant.certificateCode,
+            showRadius: restaurant.showRadius,
+            popularDishes: restaurant.popularDishes,
+            monThuOffer: restaurant.monThuOffer,
+            monThuOfferDescription: restaurant.monThuOfferDescription,
+            friSunOffer: restaurant.friSunOffer,
+            friSunOfferDescription: restaurant.friSunOfferDescription,
+            tableBookingEnabled: restaurant.tableBookingEnabled,
             createdAt: restaurant.createdAt,
             updatedAt: restaurant.updatedAt,
-            venues: spaces,
+            spaces: spaces, // Include spaces for frontend compatibility
+            venues: spaces, // Legacy field name
             photos: media.photos,
             videos: media.videos,
             menus: media.menus,
@@ -234,7 +278,10 @@ class RestaurantService {
     async updateProfile(restaurantId, updateData) {
         const allowedFields = [
             'restaurantName', 'ownerName', 'shortDescription', 'businessEmail', 'phone',
-            'address', 'geo', 'cuisines', 'features', 'openingHours', 'listingStatus'
+            'address', 'geo', 'cuisines', 'features', 'openingHours', 'listingStatus',
+            'rating', 'pricePerPlate', 'certificateCode', 'showRadius', 'popularDishes',
+            'monThuOffer', 'monThuOfferDescription', 'friSunOffer', 'friSunOfferDescription',
+            'tableBookingEnabled'
         ];
         const filteredData = {};
         for (const key of allowedFields) {
@@ -251,7 +298,18 @@ class RestaurantService {
     }
 
     async getAllRestaurants() {
-        return await this.restaurantRepository.getAll();
+        const restaurants = await this.restaurantRepository.getAll();
+        
+        // Get hero images for all restaurants
+        const restaurantIds = restaurants.map(r => r._id);
+        const heroImages = await this.mediaRepository.getHeroImagesByRestaurantIds(restaurantIds);
+        
+        // Attach hero image URLs to restaurants
+        return restaurants.map(restaurant => {
+            const restaurantObj = restaurant.toObject ? restaurant.toObject() : restaurant;
+            restaurantObj.heroImageUrl = heroImages[restaurant._id.toString()] || null;
+            return restaurantObj;
+        });
     }
 
     async deleteRestaurant(id) {
