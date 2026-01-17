@@ -25,20 +25,17 @@ class ReviewRepository {
     }
 
     async findByRestaurantId(restaurantId) {
-        // Need to join through BookingRequest
-        return await Review.find()
-            .populate({
-                path: 'eventId',
-                populate: {
-                    path: 'bookingRequestId',
-                    match: { restaurantId },
-                    populate: [
-                        { path: 'restaurantId', select: 'restaurantName' },
-                        { path: 'spaceId', select: 'name' }
-                    ]
-                }
-            })
-            .populate('reviewerId', 'name email phone companyName');
+        return await Review.find({ restaurantId })
+            .populate('reviewerId', 'name email phone companyName')
+            .populate('photos')
+            .sort({ createdAt: -1 });
+    }
+
+    async findPublishedByRestaurantId(restaurantId) {
+        return await Review.find({ restaurantId, status: 'published' })
+            .populate('reviewerId', 'name email phone companyName')
+            .populate('photos')
+            .sort({ createdAt: -1 });
     }
 
     async findByEventIds(eventIds) {
@@ -48,6 +45,12 @@ class ReviewRepository {
 
     async updateStatus(id, status) {
         return await Review.findByIdAndUpdate(id, { status }, { new: true });
+    }
+
+    async findByRestaurantIdAndEventId(restaurantId, eventId) {
+        return await Review.findOne({ restaurantId, eventId })
+            .populate('reviewerId', 'name email')
+            .populate('photos');
     }
 }
 

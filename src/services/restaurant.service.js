@@ -2,12 +2,13 @@ const BaseError = require('../errors/base.error');
 const { hashPassword } = require("../utils/bcrypt");
 
 class RestaurantService {
-    constructor(restaurantRepository, restaurantSpaceRepository, mediaRepository, userRepository, availabilityBlockRepository) {
+    constructor(restaurantRepository, restaurantSpaceRepository, mediaRepository, userRepository, availabilityBlockRepository, reviewRepository) {
         this.restaurantRepository = restaurantRepository;
         this.restaurantSpaceRepository = restaurantSpaceRepository;
         this.mediaRepository = mediaRepository;
         this.userRepository = userRepository;
         this.availabilityBlockRepository = availabilityBlockRepository;
+        this.reviewRepository = reviewRepository;
     }
 
     async search(query) {
@@ -290,6 +291,20 @@ class RestaurantService {
             }
         }
 
+        // Handle password update if provided
+        if (updateData.password) {
+            console.log('[updateProfile] Password update requested for restaurantId:', restaurantId);
+            const restaurant = await this.restaurantRepository.findById(restaurantId);
+            if (!restaurant) {
+                throw new BaseError('Restaurant not found', 404);
+            }
+            console.log('[updateProfile] Found restaurant, userId:', restaurant.userId);
+            const hashedPassword = await hashPassword(updateData.password);
+            console.log('[updateProfile] Password hashed successfully');
+            await this.userRepository.updateUser(restaurant.userId, { password: hashedPassword });
+            console.log('[updateProfile] User password updated successfully');
+        }
+
         const updated = await this.restaurantRepository.updateById(restaurantId, filteredData);
         if (!updated) {
             throw new BaseError('Restaurant not found', 404);
@@ -314,6 +329,16 @@ class RestaurantService {
 
     async deleteRestaurant(id) {
         return await this.restaurantRepository.deleteById(id);
+    }
+
+    async getReviews(restaurantId) {
+        const restaurant = await this.restaurantRepository.findById(restaurantId);
+        if (!restaurant) {
+            throw new BaseError('Restaurant not found', 404);
+        }
+
+        const reviews = await this.reviewRepository.findByRestaurantId(restaurantId);
+        return reviews;
     }
 }
 

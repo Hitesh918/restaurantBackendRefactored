@@ -1,0 +1,709 @@
+{
+  "info": {
+    "name": "Restaurant Backend API",
+    "description": "Complete API collection for restaurant management system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Signup - Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Admin User\",\n  \"phone\": \"1234567890\",\n  \"role\": \"Admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "Signup - Restaurant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"restaurant@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Restaurant Owner\",\n  \"phone\": \"9876543210\",\n  \"companyName\": \"My Restaurant\",\n  \"role\": \"Restaurant\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "Signup - Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Customer User\",\n  \"phone\": \"5555555555\",\n  \"role\": \"Customer\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Update Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"password123\",\n  \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/update-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "update-password"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurants",
+      "item": [
+        {
+          "name": "Get All Restaurants",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/restaurants",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "restaurants"]
+            }
+          }
+        },
+        {
+          "name": "Create Restaurant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantName\": \"The Grand Dining\",\n  \"ownerName\": \"John Doe\",\n  \"shortDescription\": \"Fine dining restaurant\",\n  \"businessEmail\": \"business@restaurant.com\",\n  \"phone\": \"1234567890\",\n  \"address\": {\n    \"line1\": \"123 Main Street\",\n    \"area\": \"Downtown\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"country\": \"USA\",\n    \"zip\": \"10001\"\n  },\n  \"geo\": {\n    \"lat\": 40.7128,\n    \"lng\": -74.0060\n  },\n  \"cuisines\": [\"Italian\", \"French\"],\n  \"features\": [\"WiFi\", \"Parking\", \"Bar\"],\n  \"categoryTags\": [\"iconic\", \"awarded\"],\n  \"pricePerPlate\": 50,\n  \"tableBookingEnabled\": true,\n  \"openingHours\": {\n    \"monday\": {\"open\": \"11:00\", \"close\": \"23:00\"},\n    \"tuesday\": {\"open\": \"11:00\", \"close\": \"23:00\"},\n    \"wednesday\": {\"open\": \"11:00\", \"close\": \"23:00\"},\n    \"thursday\": {\"open\": \"11:00\", \"close\": \"23:00\"},\n    \"friday\": {\"open\": \"11:00\", \"close\": \"00:00\"},\n    \"saturday\": {\"open\": \"11:00\", \"close\": \"00:00\"},\n    \"sunday\": {\"open\": \"11:00\", \"close\": \"23:00\"}\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/restaurants",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "restaurants"]
+            }
+          }
+        },
+        {
+          "name": "Get Restaurant by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/restaurants/{{restaurant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "restaurants", "{{restaurant_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Restaurant",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantName\": \"The Grand Dining Updated\",\n  \"shortDescription\": \"Updated fine dining restaurant\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/restaurants/{{restaurant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "restaurants", "{{restaurant_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Restaurant",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/restaurants/{{restaurant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "restaurants", "{{restaurant_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurant Spaces",
+      "item": [
+        {
+          "name": "Create Space",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": \"{{restaurant_id}}\",\n  \"name\": \"Grand Ballroom\",\n  \"minCapacity\": 50,\n  \"maxCapacity\": 200,\n  \"allowedEventStyles\": [\"seated\", \"standing\"],\n  \"features\": [\"Projector\", \"Sound System\", \"Dance Floor\"],\n  \"pricing\": {\n    \"minimumSpend\": 5000,\n    \"pricePerPerson\": 75,\n    \"buyoutCost\": 15000,\n    \"currency\": \"USD\",\n    \"depositRequired\": 2500,\n    \"cancellationPolicy\": \"30 days notice required\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/restaurant-space",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "restaurant-space"]
+            }
+          }
+        },
+        {
+          "name": "Get Spaces by Restaurant",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/restaurant-space/restaurant/{{restaurant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "restaurant-space", "restaurant", "{{restaurant_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Space by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/restaurant-space/{{space_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "restaurant-space", "{{space_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Space",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grand Ballroom Updated\",\n  \"maxCapacity\": 250\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/restaurant-space/{{space_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "restaurant-space", "{{space_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Space",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/restaurant-space/{{space_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "restaurant-space", "{{space_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Booking Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customer_id}}\",\n  \"restaurantId\": \"{{restaurant_id}}\",\n  \"spaceId\": \"{{space_id}}\",\n  \"eventDate\": \"2024-03-15T00:00:00Z\",\n  \"startTime\": \"18:00\",\n  \"endTime\": \"22:00\",\n  \"guestCount\": 100,\n  \"eventStyle\": \"seated\",\n  \"messageToHost\": \"Looking forward to hosting our corporate event\",\n  \"bidPrice\": 10000,\n  \"currency\": \"INR\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/requests",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "requests"]
+            }
+          }
+        },
+        {
+          "name": "Get Bookings by Restaurant",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/restaurant/{{restaurant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "restaurant", "{{restaurant_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Bookings by Customer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/customer/{{customer_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "customer", "{{customer_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Booking by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "{{booking_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"senderType\": \"customer\",\n  \"messageText\": \"Can we discuss dietary requirements?\",\n  \"attachments\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "{{booking_id}}", "messages"]
+            }
+          }
+        },
+        {
+          "name": "Get Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "{{booking_id}}", "messages"]
+            }
+          }
+        },
+        {
+          "name": "Make Decision (Approve)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approve\",\n  \"notes\": \"Approved for the requested date\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/decision",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "{{booking_id}}", "decision"]
+            }
+          }
+        },
+        {
+          "name": "Make Decision (Reject)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"reject\",\n  \"notes\": \"Space not available for requested date\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/decision",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "bookings", "{{booking_id}}", "decision"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "Get Customer Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/customers/{{customer_id}}/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "customers", "{{customer_id}}", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update Customer Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"9999999999\",\n  \"profileDescription\": \"Event planner\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/customers/{{customer_id}}/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "customers", "{{customer_id}}", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Get All Customers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/customers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "customers"]
+            }
+          }
+        },
+        {
+          "name": "Delete Customer",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/customers/{{customer_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "customers", "{{customer_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Saved Spaces",
+      "item": [
+        {
+          "name": "Save Space",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": \"{{restaurant_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/customers/{{customer_id}}/saved-spaces",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "customers", "{{customer_id}}", "saved-spaces"]
+            }
+          }
+        },
+        {
+          "name": "Get Saved Spaces",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/customers/{{customer_id}}/saved-spaces",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "customers", "{{customer_id}}", "saved-spaces"]
+            }
+          }
+        },
+        {
+          "name": "Check if Space Saved",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/customers/{{customer_id}}/saved-spaces/check/{{restaurant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "customers", "{{customer_id}}", "saved-spaces", "check", "{{restaurant_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Unsave Space",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/customers/{{customer_id}}/saved-spaces/{{restaurant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "customers", "{{customer_id}}", "saved-spaces", "{{restaurant_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plans",
+      "item": [
+        {
+          "name": "Get All Plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/plans",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plans"]
+            }
+          }
+        },
+        {
+          "name": "Create Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Plan\",\n  \"description\": \"Full access to all features\",\n  \"price\": 9999,\n  \"currency\": \"INR\",\n  \"durationInDays\": 365,\n  \"features\": {\n    \"priorityListing\": true,\n    \"crmAccess\": true,\n    \"messagingEnabled\": true,\n    \"analyticsAccess\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/plans",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plans"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "restaurant_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customer_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "space_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "booking_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

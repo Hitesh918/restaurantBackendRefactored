@@ -11,7 +11,7 @@ router.post('/requests', authenticate, BookingController.createBookingRequest);
 router.get('/restaurant/:restaurantId', BookingController.getBookingsByRestaurant);
 
 // Get bookings by customer (for customer dashboard) - requires authentication
-router.get('/customer/:customerId', authenticate, BookingController.getBookingsByCustomer);
+router.get('/customer/:customerId', BookingController.getBookingsByCustomer);
 
 // Get single booking by ID
 router.get('/:bookingRequestId', BookingController.getBookingById);

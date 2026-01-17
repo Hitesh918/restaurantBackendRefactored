@@ -1,9 +1,10 @@
 const BaseError = require('../errors/base.error');
 
 class EventService {
-    constructor(eventRepository, reviewRepository) {
+    constructor(eventRepository, reviewRepository, bookingRepository) {
         this.eventRepository = eventRepository;
         this.reviewRepository = reviewRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     /**
@@ -158,12 +159,19 @@ class EventService {
         if (!reviewData.reviewText) {
             throw new BaseError('review_text is required', 400);
         }
-        if (!reviewData.eventType || !['corporate', 'personal', 'agency'].includes(reviewData.eventType)) {
+        if (reviewData.eventType && !['corporate', 'personal', 'agency'].includes(reviewData.eventType)) {
             throw new BaseError('event_type must be corporate, personal, or agency', 400);
+        }
+
+        // Fetch restaurantId from booking chain
+        const booking = await this.bookingRepository.findById(event.bookingRequestId);
+        if (!booking) {
+            throw new BaseError('Booking not found', 404);
         }
 
         const review = await this.reviewRepository.create({
             eventId,
+            restaurantId: booking.restaurantId,
             reviewerId: reviewData.reviewerId,
             rating: reviewData.rating,
             reviewText: reviewData.reviewText,
@@ -184,6 +192,52 @@ class EventService {
     async getReview(eventId) {
         const review = await this.reviewRepository.findByEventId(eventId);
         return review;
+    }
+
+    /**
+     * POST /restaurants/:restaurantId/reviews
+     * Submit a general review for a restaurant (not tied to an event)
+     * Uses reviewerId (customerId from login)
+     */
+    async createGeneralReview(restaurantId, reviewData) {
+        // Validate required fields
+        if (!reviewData.reviewerId) {
+            throw new BaseError('reviewerId is required', 400);
+        }
+        if (!reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
+            throw new BaseError('rating must be between 1 and 5', 400);
+        }
+        if (!reviewData.reviewText) {
+            throw new BaseError('reviewText is required', 400);
+        }
+        if (reviewData.eventType && !['corporate', 'personal', 'agency'].includes(reviewData.eventType)) {
+            throw new BaseError('eventType must be corporate, personal, or agency', 400);
+        }
+
+        const review = await this.reviewRepository.create({
+            eventId: null, // No event for general reviews
+            restaurantId,
+            reviewerId: reviewData.reviewerId,
+            rating: reviewData.rating,
+            reviewText: reviewData.reviewText,
+            eventType: reviewData.eventType,
+            photos: reviewData.photos || [],
+            status: 'pending_moderation'
+        });
+
+        return {
+            reviewId: review._id,
+            status: review.status
+        };
+    }
+
+    /**
+     * GET /restaurants/:restaurantId/reviews
+     * Get all published reviews for a restaurant
+     */
+    async getRestaurantReviews(restaurantId) {
+        const reviews = await this.reviewRepository.findByRestaurantId(restaurantId);
+        return reviews;
     }
 }
 

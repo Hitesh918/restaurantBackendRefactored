@@ -1,10 +1,11 @@
 const { EventService } = require('../services');
-const { EventRepository, ReviewRepository } = require('../repositories');
+const { EventRepository, ReviewRepository, BookingRequestRepository } = require('../repositories');
 const { StatusCodes } = require('http-status-codes');
 
 const eventService = new EventService(
     new EventRepository(),
-    new ReviewRepository()
+    new ReviewRepository(),
+    new BookingRequestRepository()
 );
 
 /**
@@ -157,6 +158,44 @@ async function getReview(req, res, next) {
     }
 }
 
+/**
+ * POST /restaurants/:restaurantId/reviews
+ * Submit a general review for a restaurant (not tied to an event)
+ */
+async function createGeneralReview(req, res, next) {
+    try {
+        const { restaurantId } = req.params;
+        const result = await eventService.createGeneralReview(restaurantId, req.body);
+        return res.status(StatusCodes.CREATED).json({
+            success: true,
+            message: 'Review submitted successfully',
+            error: {},
+            data: result
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+/**
+ * GET /restaurants/:restaurantId/reviews
+ * Get all published reviews for a restaurant
+ */
+async function getRestaurantReviews(req, res, next) {
+    try {
+        const { restaurantId } = req.params;
+        const reviews = await eventService.getRestaurantReviews(restaurantId);
+        return res.status(StatusCodes.OK).json({
+            success: true,
+            message: 'Reviews fetched successfully',
+            error: {},
+            data: reviews
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getAllEvents,
     getEventsByRestaurant,
@@ -165,5 +204,7 @@ module.exports = {
     updateSpecs,
     markCompleted,
     createReview,
-    getReview
+    getReview,
+    createGeneralReview,
+    getRestaurantReviews
 };

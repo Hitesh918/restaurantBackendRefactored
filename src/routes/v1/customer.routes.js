@@ -10,10 +10,10 @@ customerRouter.get('/:id/profile', CustomerController.getProfile);
 customerRouter.put('/:id/profile', CustomerController.updateProfile);
 
 // Saved Spaces routes - requires authentication
-customerRouter.post('/:id/saved-spaces', authenticate, SavedSpaceController.saveSpace);
-customerRouter.delete('/:id/saved-spaces/:restaurantId', authenticate, SavedSpaceController.unsaveSpace);
-customerRouter.get('/:id/saved-spaces', authenticate, SavedSpaceController.getSavedSpaces);
-customerRouter.get('/:id/saved-spaces/check/:restaurantId', authenticate, SavedSpaceController.checkIfSaved);
+customerRouter.post('/:customerId/saved-spaces', authenticate, SavedSpaceController.saveSpace);
+customerRouter.delete('/:customerId/saved-spaces/:restaurantId', authenticate, SavedSpaceController.unsaveSpace);
+customerRouter.get('/:customerId/saved-spaces', authenticate, SavedSpaceController.getSavedSpaces);
+customerRouter.get('/:customerId/saved-spaces/check/:restaurantId', authenticate, SavedSpaceController.checkIfSaved);
 
 // Admin routes
 customerRouter.get('/', CustomerController.getAllCustomers);

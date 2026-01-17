@@ -1,5 +1,5 @@
 const {RestaurantService} = require('../services');
-const {RestaurantRepository, RestaurantSpaceRepository, MediaRepository, UserRepository, AvailabilityBlockRepository} = require('../repositories');
+const {RestaurantRepository, RestaurantSpaceRepository, MediaRepository, UserRepository, AvailabilityBlockRepository, ReviewRepository} = require('../repositories');
 const { StatusCodes } = require('http-status-codes');
 
 const restaurantService = new RestaurantService(
@@ -7,7 +7,8 @@ const restaurantService = new RestaurantService(
     new RestaurantSpaceRepository(),
     new MediaRepository(),
     new UserRepository(),
-    new AvailabilityBlockRepository()
+    new AvailabilityBlockRepository(),
+    new ReviewRepository()
 );
 
 async function search(req, res, next) {
@@ -117,6 +118,20 @@ async function deleteRestaurant(req, res, next) {
     }
 }
 
+async function getReviews(req, res, next) {
+    try {
+        const reviews = await restaurantService.getReviews(req.params.id);
+        return res.status(StatusCodes.OK).json({
+            success: true,
+            message: 'Successfully fetched restaurant reviews',
+            error: {},
+            data: reviews
+        });
+    } catch(error) {
+        next(error);
+    }
+}
+
 module.exports = {
     search,
     createRestaurant,
@@ -124,5 +139,6 @@ module.exports = {
     getPublicProfile,
     updateProfile,
     getAllRestaurants,
-    deleteRestaurant
+    deleteRestaurant,
+    getReviews
 };

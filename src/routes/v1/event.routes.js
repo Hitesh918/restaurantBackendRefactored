@@ -1,5 +1,6 @@
 const express = require('express');
 const EventController = require('../../controllers/event.controller');
+const { authenticate } = require('../../middleware/auth.middleware');
 
 const router = express.Router();
 
@@ -21,8 +22,12 @@ router.put('/:eventId/specs', EventController.updateSpecs);
 // Mark event as completed
 router.post('/:eventId/complete', EventController.markCompleted);
 
-// Reviews
-router.post('/:eventId/reviews', EventController.createReview);
+// Reviews - Event-based
+router.post('/:eventId/reviews', authenticate, EventController.createReview);
 router.get('/:eventId/reviews', EventController.getReview);
+
+// Reviews - General restaurant reviews
+router.post('/restaurants/:restaurantId/reviews', EventController.createGeneralReview);
+router.get('/restaurants/:restaurantId/reviews', EventController.getRestaurantReviews);
 
 module.exports = router;

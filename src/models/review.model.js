@@ -5,8 +5,15 @@ const reviewSchema = new mongoose.Schema(
     eventId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Event",
+      required: false,
+      sparse: true, // Allows multiple null values for general reviews
+    },
+
+    restaurantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Restaurant",
       required: true,
-      unique: true, // Only ONE review per event
+      index: true,
     },
 
     reviewerId: {
@@ -30,7 +37,7 @@ const reviewSchema = new mongoose.Schema(
     eventType: {
       type: String,
       enum: ["corporate", "personal", "agency"],
-      required: true,
+      
     },
 
     photos: [{ type: mongoose.Schema.Types.ObjectId, ref: "Media" }],
@@ -43,6 +50,9 @@ const reviewSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Index for eventId with sparse option to allow multiple null values
+reviewSchema.index({ eventId: 1 }, { sparse: true, unique: true });
 
 const Review = mongoose.model("Review", reviewSchema);
 module.exports = Review;

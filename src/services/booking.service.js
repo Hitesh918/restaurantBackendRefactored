@@ -104,7 +104,7 @@ class BookingService {
 
     /**
      * Send message in booking thread
-     * senderId can be customerId or restaurantId - we'll resolve to userId
+     * senderType: 'customer' or 'restaurant' - resolved from booking
      */
     async sendMessage(bookingRequestId, data) {
         const booking = await this.bookingRequestRepository.findById(bookingRequestId);
@@ -112,19 +112,27 @@ class BookingService {
             throw new BaseError('Booking request not found', 404);
         }
 
-        // Resolve senderId to userId
-        let senderUserId = data.senderUserId;
-        
-        if (data.customerId) {
-            const customer = await this.customerRepository.findById(data.customerId);
-            if (customer) senderUserId = customer.userId;
-        } else if (data.restaurantId) {
-            const restaurant = await this.restaurantRepository.findById(data.restaurantId);
-            if (restaurant) senderUserId = restaurant.userId;
+        if (!data.senderType || !['customer', 'restaurant'].includes(data.senderType)) {
+            throw new BaseError('senderType must be "customer" or "restaurant"', 400);
         }
 
-        if (!senderUserId) {
-            throw new BaseError('Could not resolve sender', 400);
+        // Resolve senderUserId from booking based on senderType
+        let senderUserId;
+        
+        if (data.senderType === 'customer') {
+            const customerId = booking.customerId?._id || booking.customerId;
+            const customer = await this.customerRepository.findById(customerId);
+            if (!customer) {
+                throw new BaseError('Customer not found', 404);
+            }
+            senderUserId = customer.userId;
+        } else {
+            const restaurantId = booking.restaurantId?._id || booking.restaurantId;
+            const restaurant = await this.restaurantRepository.findById(restaurantId);
+            if (!restaurant) {
+                throw new BaseError('Restaurant not found', 404);
+            }
+            senderUserId = restaurant.userId;
         }
 
         const message = await this.bookingMessageRepository.create({

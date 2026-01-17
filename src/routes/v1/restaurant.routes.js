@@ -23,6 +23,9 @@ router.post('/', authenticate, RestaurantController.createRestaurant);
 router.get('/:id/profile', authenticate, RestaurantController.getProfile);
 router.put('/:id/profile', authenticate, RestaurantController.updateProfile);
 
+// Reviews route (public - anyone can view reviews)
+router.get('/:id/reviews', RestaurantController.getReviews);
+
 // Availability APIs (requires authentication)
 router.get('/:restaurantId/availability', authenticate, AvailabilityController.checkAvailability);
 router.get('/:restaurantId/availability/blocks', authenticate, AvailabilityController.getBlocks);
