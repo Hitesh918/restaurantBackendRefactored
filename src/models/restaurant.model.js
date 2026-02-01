@@ -53,6 +53,13 @@ const restaurantSchema = new mongoose.Schema({
       sunday: { open: String, close: String },
     },
 
+    // New system compatibility
+    restaurantProfileId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "RestaurantProfile",
+        sparse: true // Allow null values
+    },
+
     listingStatus: {
       type: String,
       enum: ['draft', 'pending', 'active'],

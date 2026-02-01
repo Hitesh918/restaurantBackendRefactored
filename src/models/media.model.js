@@ -4,7 +4,7 @@ const media = new mongoose.Schema(
   {
     ownerType: {
       type: String,
-      enum: ["restaurant", "space", "event"],
+      enum: ["restaurant", "restaurantProfile", "space", "event"],
       required: true,
     },
 
@@ -23,6 +23,7 @@ const media = new mongoose.Schema(
       type: String,
       enum: [
         "hero",
+        "logo",
         "private_dining",
         "events_style",
         "food_beverage",

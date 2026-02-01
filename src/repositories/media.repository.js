@@ -16,6 +16,7 @@ class MediaRepository {
         return {
             photos: media.filter(m => m.mediaType === 'photo'),
             videos: media.filter(m => m.mediaType === 'video'),
+            pdfs: media.filter(m => m.mediaType === 'pdf'),
             menus: media.filter(m => m.category === 'menu'),
             floorplans: media.filter(m => m.category === 'floorplan')
         };
@@ -23,7 +24,7 @@ class MediaRepository {
 
     async getHeroImagesByRestaurantIds(restaurantIds) {
         const heroImages = await Media.find({
-            ownerType: 'restaurant',
+            ownerType: 'restaurantProfile',
             ownerId: { $in: restaurantIds },
             category: 'hero',
             mediaType: 'photo'
@@ -36,6 +37,23 @@ class MediaRepository {
             }
         }
         return imageMap;
+    }
+
+    async getLogosByRestaurantIds(restaurantIds) {
+        const logos = await Media.find({
+            ownerType: 'restaurantProfile',
+            ownerId: { $in: restaurantIds },
+            category: 'logo',
+            mediaType: 'photo'
+        }).lean();
+
+        const logoMap = {};
+        for (const logo of logos) {
+            if (!logoMap[logo.ownerId.toString()]) {
+                logoMap[logo.ownerId.toString()] = logo.url;
+            }
+        }
+        return logoMap;
     }
 
     async deleteByOwner(ownerType, ownerId) {
@@ -56,6 +74,29 @@ class MediaRepository {
 
     async delete(id) {
         return await Media.findByIdAndDelete(id);
+    }
+
+    async upsertByOwnerAndCategory(ownerType, ownerId, category, data) {
+        const existingMedia = await Media.findOne({ ownerType, ownerId, category });
+        
+        if (existingMedia) {
+            // Update existing media
+            return await Media.findByIdAndUpdate(existingMedia._id, data, { new: true });
+        } else {
+            // Create new media
+            const mediaData = {
+                ownerType,
+                ownerId,
+                category,
+                ...data
+            };
+            const media = new Media(mediaData);
+            return await media.save();
+        }
+    }
+
+    async deleteByOwnerAndCategory(ownerType, ownerId, category) {
+        return await Media.deleteMany({ ownerType, ownerId, category });
     }
 }
 

@@ -24,10 +24,42 @@ class RestaurantService {
             cuisines,
             budgetMin,
             budgetMax,
+            perPersonBudget, // New parameter for per-person budget ranges
             features,
             ratingMin,
             categoryTags
         } = query;
+
+        // Convert per-person budget range to min/max values
+        let budgetMinValue = budgetMin;
+        let budgetMaxValue = budgetMax;
+        
+        if (perPersonBudget) {
+            switch (perPersonBudget) {
+                case 'under-50':
+                    budgetMaxValue = 50;
+                    break;
+                case '50-100':
+                    budgetMinValue = 50;
+                    budgetMaxValue = 100;
+                    break;
+                case '100-150':
+                    budgetMinValue = 100;
+                    budgetMaxValue = 150;
+                    break;
+                case '150-200':
+                    budgetMinValue = 150;
+                    budgetMaxValue = 200;
+                    break;
+                case '200-300':
+                    budgetMinValue = 200;
+                    budgetMaxValue = 300;
+                    break;
+                case '300+':
+                    budgetMinValue = 300;
+                    break;
+            }
+        }
 
         // Step 1: Find spaces that match capacity and seating type (if guestCount is provided)
         const seatingTypesArray = seatingTypes ? seatingTypes.split(',') : null;
@@ -86,8 +118,8 @@ class RestaurantService {
             features: featuresArray,
             categoryTags: categoryTagsArray,
             ratingMin,
-            budgetMin,
-            budgetMax
+            budgetMin: budgetMinValue,
+            budgetMax: budgetMaxValue
         });
 
         // Filter to only restaurants that have matching spaces (if capacity filtering was applied)

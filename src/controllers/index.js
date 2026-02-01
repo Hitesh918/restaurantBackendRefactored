@@ -3,6 +3,9 @@ module.exports = {
     CustomerController: require('./customer.controller'),
     AuthController: require('./auth.controller'),
     RestaurantController: require('./restaurant.controller'),
+    RestaurantProfileController: require('./restaurantProfile.controller'),
+    RestaurantRoomController: require('./restaurantRoom.controller'),
+    SubscriptionController: require('./subscription.controller'),
     BookingController: require('./booking.controller'),
     AvailabilityController: require('./availability.controller'),
     EventController: require('./event.controller'),
@@ -12,6 +15,7 @@ module.exports = {
     UserController: require('./user.controller'),
     InquiryController: require('./inquiry.controller'),
     GalleryController: require('./gallery.controller'),
+    MenuManagementController: require('./menuManagement.controller'),
     MenuController: require('./menu.controller'),
     CRMController: require('./crm.controller')
 }

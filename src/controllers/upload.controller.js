@@ -111,9 +111,46 @@ async function uploadMenuPdf(req, res, next) {
     }
 }
 
+/**
+ * POST /upload/image
+ * Upload general image (for restaurant profiles, etc.)
+ */
+async function uploadImage(req, res, next) {
+    try {
+        if (!req.file) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: 'No image file provided',
+                error: {},
+                data: null
+            });
+        }
+
+        // Generate full URL
+        const imagePath = `/uploads/images/${req.file.filename}`;
+        const imageUrl = `${BACKEND_BASE_URL}${imagePath}`;
+
+        return res.status(StatusCodes.OK).json({
+            success: true,
+            message: 'Image uploaded successfully',
+            error: {},
+            data: {
+                filename: req.file.filename,
+                originalName: req.file.originalname,
+                path: imagePath,
+                url: imageUrl,
+                size: req.file.size
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     uploadCuisineImage,
     uploadGalleryImage,
-    uploadMenuPdf
+    uploadMenuPdf,
+    uploadImage
 };
 

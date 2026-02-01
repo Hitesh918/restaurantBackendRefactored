@@ -8,8 +8,9 @@ const uploadsDir = path.join(__dirname, '../../uploads');
 const cuisineImagesDir = path.join(uploadsDir, 'cuisines');
 const galleryImagesDir = path.join(uploadsDir, 'gallery');
 const menuPdfsDir = path.join(uploadsDir, 'menus');
+const generalImagesDir = path.join(uploadsDir, 'images');
 
-[uploadsDir, cuisineImagesDir, galleryImagesDir, menuPdfsDir].forEach(dir => {
+[uploadsDir, cuisineImagesDir, galleryImagesDir, menuPdfsDir, generalImagesDir].forEach(dir => {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
@@ -45,6 +46,19 @@ const galleryStorage = multer.diskStorage({
 const menuStorage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, menuPdfsDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        const name = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9]/g, '-');
+        cb(null, `${name}-${uniqueSuffix}${ext}`);
+    }
+});
+
+// Storage for general images (restaurant profiles, etc.)
+const generalImageStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, generalImagesDir);
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -107,10 +121,20 @@ const menuUpload = multer({
     fileFilter: pdfFilter
 });
 
+// Configure multer for general images
+const generalImageUpload = multer({
+    storage: generalImageStorage,
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB limit
+    },
+    fileFilter: imageFilter
+});
+
 module.exports = {
     uploadSingle: cuisineUpload.single('image'),
     uploadMultiple: cuisineUpload.array('images', 10),
     uploadGalleryImage: galleryUpload.single('image'),
-    uploadMenuPdf: menuUpload.single('pdf')
+    uploadMenuPdf: menuUpload.single('pdf'),
+    uploadGeneralImage: generalImageUpload.single('image')
 };
 

@@ -4,6 +4,8 @@ module.exports = {
     UserRepository: require('./user.repository'),
     CustomerRepository: require('./customer.repository'),
     RestaurantRepository: require('./restaurant.repository'),
+    RestaurantProfileRepository: require('./restaurantProfile.repository'),
+    RestaurantRoomRepository: require('./restaurantRoom.repository'),
     BookingRequestRepository: require('./bookingRequest.repository'),
     BookingMessageRepository: require('./bookingMessage.repository'),
     RestaurantSpaceRepository: require('./restaurantSpace.repository'),

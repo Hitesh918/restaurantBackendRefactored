@@ -1,94 +1,86 @@
 const BaseError = require('../errors/base.error');
 
 class GalleryService {
-    constructor(mediaRepository, restaurantRepository) {
-        this.mediaRepository = mediaRepository;
-        this.restaurantRepository = restaurantRepository;
+    constructor(restaurantRoomRepository, restaurantProfileRepository) {
+        this.restaurantRoomRepository = restaurantRoomRepository;
+        this.restaurantProfileRepository = restaurantProfileRepository;
     }
 
-    async getGalleryItems(restaurantId, filters = {}) {
-        // Verify restaurant exists
-        const restaurant = await this.restaurantRepository.findById(restaurantId);
-        if (!restaurant) {
-            throw new BaseError('Restaurant not found', 404);
+    async getAllPhotosForUser(userId) {
+        // Get user's restaurant profile
+        const profile = await this.restaurantProfileRepository.findByUserId(userId);
+        if (!profile) {
+            throw new BaseError('Restaurant profile not found', 404);
         }
 
-        const items = await this.mediaRepository.findByCategory('restaurant', restaurantId, 'gallery');
+        return await this.getAllPhotosForProfile(profile._id);
+    }
+
+    async getAllPhotosForProfile(profileId) {
+        // Get all rooms for this profile
+        const rooms = await this.restaurantRoomRepository.findByProfileId(profileId);
         
-        // Apply filters
-        let filtered = items;
-        if (filters.status) {
-            filtered = filtered.filter(item => item.status === filters.status);
-        }
-        if (filters.search) {
-            const searchLower = filters.search.toLowerCase();
-            filtered = filtered.filter(item => 
-                item.title?.toLowerCase().includes(searchLower)
-            );
-        }
-
-        return filtered;
-    }
-
-    async getGalleryItemById(id) {
-        const item = await this.mediaRepository.findById(id);
-        if (!item) {
-            throw new BaseError('Gallery item not found', 404);
-        }
-        if (item.category !== 'gallery') {
-            throw new BaseError('Item is not a gallery item', 400);
-        }
-        return item;
-    }
-
-    async createGalleryItem(restaurantId, data) {
-        // Verify restaurant exists
-        const restaurant = await this.restaurantRepository.findById(restaurantId);
-        if (!restaurant) {
-            throw new BaseError('Restaurant not found', 404);
-        }
-
-        if (!data.url) {
-            throw new BaseError('Image URL is required', 400);
-        }
-
-        const galleryItem = await this.mediaRepository.create({
-            ownerType: 'restaurant',
-            ownerId: restaurantId,
-            mediaType: 'photo',
-            category: 'gallery',
-            url: data.url,
-            title: data.title || '',
-            status: data.status || 'Draft',
-        });
-
-        return galleryItem;
-    }
-
-    async updateGalleryItem(id, restaurantId, updateData) {
-        const item = await this.getGalleryItemById(id);
+        const allPhotos = [];
         
-        // Verify ownership
-        if (item.ownerId.toString() !== restaurantId.toString()) {
-            throw new BaseError('You do not have permission to update this gallery item', 403);
+        for (const room of rooms) {
+            if (room.media && room.media.photos && room.media.photos.length > 0) {
+                const roomPhotos = room.media.photos.map(photo => ({
+                    id: photo._id.toString(),
+                    url: photo.url,
+                    filename: photo.filename,
+                    caption: photo.caption,
+                    isPrimary: photo.isPrimary || false,
+                    uploadedAt: photo.uploadedAt,
+                    roomId: room._id.toString(),
+                    roomName: room.roomName,
+                    roomType: room.roomType
+                }));
+                
+                allPhotos.push(...roomPhotos);
+            }
         }
 
-        const updated = await this.mediaRepository.update(id, updateData);
-        return updated;
+        // Sort by upload date (newest first)
+        allPhotos.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+        
+        return allPhotos;
     }
 
-    async deleteGalleryItem(id, restaurantId) {
-        const item = await this.getGalleryItemById(id);
-        
-        // Verify ownership
-        if (item.ownerId.toString() !== restaurantId.toString()) {
-            throw new BaseError('You do not have permission to delete this gallery item', 403);
+    async getGalleryStatsForUser(userId) {
+        // Get user's restaurant profile
+        const profile = await this.restaurantProfileRepository.findByUserId(userId);
+        if (!profile) {
+            throw new BaseError('Restaurant profile not found', 404);
         }
 
-        await this.mediaRepository.delete(id);
-        return { success: true };
+        return await this.getGalleryStatsForProfile(profile._id);
+    }
+
+    async getGalleryStatsForProfile(profileId) {
+        // Get all rooms for this profile
+        const rooms = await this.restaurantRoomRepository.findByProfileId(profileId);
+        
+        let totalPhotos = 0;
+        let roomsWithPhotos = 0;
+        const photosByRoom = {};
+        
+        for (const room of rooms) {
+            const roomPhotoCount = room.media?.photos?.length || 0;
+            photosByRoom[room._id.toString()] = roomPhotoCount;
+            totalPhotos += roomPhotoCount;
+            
+            if (roomPhotoCount > 0) {
+                roomsWithPhotos++;
+            }
+        }
+
+        return {
+            totalPhotos,
+            roomsWithPhotos,
+            totalRooms: rooms.length,
+            photosByRoom
+        };
     }
 }
 
 module.exports = GalleryService;
-

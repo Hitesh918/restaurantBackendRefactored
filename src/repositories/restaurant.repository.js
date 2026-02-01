@@ -20,6 +20,15 @@ class RestaurantRepository {
         }
     }
 
+    async findOne(query) {
+        try {
+            return await Restaurant.findOne(query);
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
     async findById(id) {
         return await Restaurant.findById(id);
     }

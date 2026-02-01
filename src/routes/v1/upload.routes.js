@@ -1,7 +1,7 @@
 const express = require('express');
 const { UploadController } = require('../../controllers');
 const { authenticate, authorize } = require('../../middleware/auth.middleware');
-const { uploadSingle, uploadGalleryImage, uploadMenuPdf } = require('../../middleware/upload.middleware');
+const { uploadSingle, uploadGalleryImage, uploadMenuPdf, uploadGeneralImage } = require('../../middleware/upload.middleware');
 
 const router = express.Router();
 
@@ -13,6 +13,9 @@ router.post('/gallery-image', authenticate, authorize('Restaurant'), uploadGalle
 
 // Upload menu PDF (Restaurant only)
 router.post('/menu-pdf', authenticate, authorize('Restaurant'), uploadMenuPdf, UploadController.uploadMenuPdf);
+
+// Upload general image (for restaurant profiles, etc.)
+router.post('/image', authenticate, uploadGeneralImage, UploadController.uploadImage);
 
 module.exports = router;
 

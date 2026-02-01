@@ -1,28 +1,28 @@
 const { StatusCodes } = require('http-status-codes');
 
-class GalleryController {
-    constructor(galleryService) {
-        this.galleryService = galleryService;
+class MenuManagementController {
+    constructor(menuManagementService) {
+        this.menuManagementService = menuManagementService;
     }
 
-    async getAllPhotos(req, res, next) {
+    async getAllMenus(req, res, next) {
         try {
             const userId = req.user.id;
-            const photos = await this.galleryService.getAllPhotosForUser(userId);
+            const menus = await this.menuManagementService.getAllMenusForUser(userId);
             
             res.status(StatusCodes.OK).json({
                 success: true,
-                data: photos
+                data: menus
             });
         } catch (error) {
             next(error);
         }
     }
 
-    async getGalleryStats(req, res, next) {
+    async getMenuStats(req, res, next) {
         try {
             const userId = req.user.id;
-            const stats = await this.galleryService.getGalleryStatsForUser(userId);
+            const stats = await this.menuManagementService.getMenuStatsForUser(userId);
             
             res.status(StatusCodes.OK).json({
                 success: true,
@@ -33,24 +33,24 @@ class GalleryController {
         }
     }
 
-    async getProfilePhotos(req, res, next) {
+    async getProfileMenus(req, res, next) {
         try {
             const { profileId } = req.params;
-            const photos = await this.galleryService.getAllPhotosForProfile(profileId);
+            const menus = await this.menuManagementService.getAllMenusForProfile(profileId);
             
             res.status(StatusCodes.OK).json({
                 success: true,
-                data: photos
+                data: menus
             });
         } catch (error) {
             next(error);
         }
     }
 
-    async getProfileStats(req, res, next) {
+    async getProfileMenuStats(req, res, next) {
         try {
             const { profileId } = req.params;
-            const stats = await this.galleryService.getGalleryStatsForProfile(profileId);
+            const stats = await this.menuManagementService.getMenuStatsForProfile(profileId);
             
             res.status(StatusCodes.OK).json({
                 success: true,
@@ -62,4 +62,4 @@ class GalleryController {
     }
 }
 
-module.exports = GalleryController;
+module.exports = MenuManagementController;

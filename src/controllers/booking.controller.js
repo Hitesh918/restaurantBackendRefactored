@@ -6,7 +6,8 @@ const {
     CustomerRepository,
     RestaurantSpaceRepository,
     AvailabilityBlockRepository,
-    EventRepository
+    EventRepository,
+    RestaurantProfileRepository
 } = require('../repositories');
 const { StatusCodes } = require('http-status-codes');
 
@@ -21,6 +22,7 @@ const bookingService = new BookingService(
 );
 
 const restaurantRepository = new RestaurantRepository();
+const restaurantProfileRepository = new RestaurantProfileRepository();
 
 async function createBookingRequest(req, res, next) {
     try {
@@ -138,21 +140,37 @@ async function getBookingsByCustomer(req, res, next) {
  */
 async function getMyBookings(req, res, next) {
     try {
-        // Get restaurant - try userId first (for new tokens), then try id as restaurant._id (for old tokens)
-        let restaurant = null;
-        if (req.user.userId) {
-            restaurant = await restaurantRepository.findByUserId(req.user.userId);
-        }
+        // First, find the restaurant profile by userId
+        const restaurantProfile = await restaurantProfileRepository.findByUserId(req.user.userId || req.user.id);
         
-        // Fallback: if not found and we have id, try finding restaurant by _id (for backward compatibility)
-        if (!restaurant && req.user.id) {
-            restaurant = await restaurantRepository.findById(req.user.id);
+        if (!restaurantProfile) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: 'Restaurant profile not found for this user',
+                error: {},
+                data: null
+            });
+        }
+
+        // Then find the restaurant record by restaurantProfileId
+        let restaurant = await restaurantRepository.findOne({ restaurantProfileId: restaurantProfile._id });
+        
+        // If no restaurant found by profile ID, try to find by userId (fallback for legacy data)
+        if (!restaurant) {
+            restaurant = await restaurantRepository.findByUserId(req.user.userId || req.user.id);
+            
+            // If we found a restaurant by userId but it's not linked to the profile, link them
+            if (restaurant && !restaurant.restaurantProfileId) {
+                await restaurantRepository.updateById(restaurant._id, {
+                    restaurantProfileId: restaurantProfile._id
+                });
+            }
         }
         
         if (!restaurant) {
             return res.status(StatusCodes.NOT_FOUND).json({
                 success: false,
-                message: 'Restaurant not found for this user',
+                message: 'No restaurant record found for this user. Please contact support.',
                 error: {},
                 data: null
             });
@@ -229,21 +247,37 @@ async function getMyBookingById(req, res, next) {
  */
 async function makeMyDecision(req, res, next) {
     try {
-        // Get restaurant - try userId first (for new tokens), then try id as restaurant._id (for old tokens)
-        let restaurant = null;
-        if (req.user.userId) {
-            restaurant = await restaurantRepository.findByUserId(req.user.userId);
-        }
+        // First, find the restaurant profile by userId
+        const restaurantProfile = await restaurantProfileRepository.findByUserId(req.user.userId || req.user.id);
         
-        // Fallback: if not found and we have id, try finding restaurant by _id (for backward compatibility)
-        if (!restaurant && req.user.id) {
-            restaurant = await restaurantRepository.findById(req.user.id);
+        if (!restaurantProfile) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: 'Restaurant profile not found for this user',
+                error: {},
+                data: null
+            });
+        }
+
+        // Then find the restaurant record by restaurantProfileId
+        let restaurant = await restaurantRepository.findOne({ restaurantProfileId: restaurantProfile._id });
+        
+        // If no restaurant found by profile ID, try to find by userId (fallback for legacy data)
+        if (!restaurant) {
+            restaurant = await restaurantRepository.findByUserId(req.user.userId || req.user.id);
+            
+            // If we found a restaurant by userId but it's not linked to the profile, link them
+            if (restaurant && !restaurant.restaurantProfileId) {
+                await restaurantRepository.updateById(restaurant._id, {
+                    restaurantProfileId: restaurantProfile._id
+                });
+            }
         }
         
         if (!restaurant) {
             return res.status(StatusCodes.NOT_FOUND).json({
                 success: false,
-                message: 'Restaurant not found for this user',
+                message: 'No restaurant record found for this user. Please contact support.',
                 error: {},
                 data: null
             });
