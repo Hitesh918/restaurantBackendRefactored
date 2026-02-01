@@ -1,6 +1,9 @@
 const { SpaceService } = require('../services');
+const RestaurantRoomService = require('../services/restaurantRoom.service');
 const SpaceRepository = require('../repositories/restaurantSpace.repository');
 const RestaurantRepository = require('../repositories/restaurant.repository');
+const RestaurantProfileRepository = require('../repositories/restaurantProfile.repository');
+const RestaurantRoomRepository = require('../repositories/restaurantRoom.repository');
 const MediaRepository = require('../repositories/media.repository');
 const { StatusCodes } = require('http-status-codes');
 
@@ -8,6 +11,11 @@ const spaceService = new SpaceService(
     new SpaceRepository(),
     new RestaurantRepository(),
     new MediaRepository()
+);
+
+const restaurantRoomService = new RestaurantRoomService(
+    new RestaurantRoomRepository(),
+    new RestaurantProfileRepository()
 );
 
 const restaurantRepository = new RestaurantRepository();
@@ -23,10 +31,41 @@ async function getAllSpaces(req, res, next) {
         
         let spaces;
         if (restaurantId) {
-            // Filter by restaurant ID
-            spaces = await spaceService.getSpacesByRestaurantId(restaurantId);
+            // Filter by restaurant ID - fetch from restaurant rooms
+            const rooms = await restaurantRoomService.getRoomsByProfile(restaurantId);
+            
+            // Transform restaurant rooms to spaces format
+            spaces = rooms.map(room => {
+                // Convert relative image URLs to full URLs
+                const baseUrl = process.env.BACKEND_BASE_URL || 'http://localhost:8000';
+                const heroImageUrl = room.media?.photos?.find(photo => photo.isPrimary)?.url || 
+                                   room.media?.photos?.[0]?.url;
+                const fullHeroImageUrl = heroImageUrl ? `${baseUrl}${heroImageUrl}` : null;
+                
+                return {
+                    _id: room._id,
+                    name: room.roomName,
+                    restaurantId: room.restaurantProfileId,
+                    restaurantName: 'Restaurant', // Will be populated if needed
+                    minCapacity: room.capacity?.seated?.min || 1,
+                    maxCapacity: room.capacity?.seated?.max || 50,
+                    allowedEventStyles: room.roomType === 'private_dining' ? ['seated', 'standing'] : ['seated'],
+                    features: room.features || [],
+                    heroImageUrl: fullHeroImageUrl,
+                    status: room.isActive ? 'active' : 'inactive',
+                    createdAt: room.createdAt,
+                    updatedAt: room.updatedAt,
+                    // Additional room-specific data
+                    description: room.description,
+                    minimumSpend: room.minimumSpend,
+                    capacity: {
+                        seated: room.capacity?.seated || { min: 1, max: 50 },
+                        standing: room.capacity?.standing || { min: 1, max: 50 }
+                    }
+                };
+            });
         } else {
-            // Get all spaces
+            // Get all spaces from the original spaces collection
             spaces = await spaceService.getAllSpaces();
         }
         
