@@ -1,4 +1,4 @@
-const { RestaurantSpace } = require('../models');
+const { RestaurantSpace,RestaurantRoom } = require('../models');
 
 class RestaurantSpaceRepository {
     async create(data) {
@@ -7,7 +7,7 @@ class RestaurantSpaceRepository {
     }
 
     async findById(id) {
-        return await RestaurantSpace.findById(id);
+        return await RestaurantRoom.findById(id);
     }
 
     async findByRestaurantId(restaurantId) {

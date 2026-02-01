@@ -10,13 +10,21 @@ class BookingRequestRepository {
         return await BookingRequest.findById(id)
             .populate('restaurantId', 'restaurantName')
             .populate('customerId', 'name email phone')
-            .populate('spaceId', 'name');
+            .populate({
+                path: 'spaceId',
+                model: 'RestaurantRoom',
+                select: 'roomName roomType capacity description'
+            });
     }
 
     async findByRestaurantId(restaurantId) {
         return await BookingRequest.find({ restaurantId })
             .populate('customerId', 'name email phone companyName')
-            .populate('spaceId', 'name')
+            .populate({
+                path: 'spaceId',
+                model: 'RestaurantRoom',
+                select: 'roomName roomType capacity description'
+            })
             .sort({ createdAt: -1 })
             .lean();
     }
@@ -27,7 +35,11 @@ class BookingRequestRepository {
 
         const bookings = await BookingRequest.find({ restaurantId })
             .populate('customerId', 'name email phone')
-            .populate('spaceId', 'name')
+            .populate({
+                path: 'spaceId',
+                model: 'RestaurantRoom',
+                select: 'roomName roomType capacity description'
+            })
             .sort({ eventDate: -1 })
             .lean();
 
@@ -46,7 +58,7 @@ class BookingRequestRepository {
                 customerName: customer?.name || null,
                 customerEmail: customer?.email || null,
                 customerPhone: customer?.phone || null,
-                spaceName: booking.spaceId?.name || null,
+                spaceName: booking.spaceId?.roomName || null,
                 eventDate: booking.eventDate,
                 startTime: booking.startTime,
                 endTime: booking.endTime,
@@ -94,7 +106,11 @@ class BookingRequestRepository {
         // Query by customerId
         const bookings = await BookingRequest.find({ customerId })
             .populate('restaurantId', 'restaurantName')
-            .populate('spaceId', 'name')
+            .populate({
+                path: 'spaceId',
+                model: 'RestaurantRoom',
+                select: 'roomName roomType capacity description'
+            })
             .sort({ eventDate: -1 })
             .lean();
 
@@ -119,7 +135,7 @@ class BookingRequestRepository {
             const formatted = {
                 _id: booking._id,
                 restaurantName: booking.restaurantId?.restaurantName || null,
-                spaceName: booking.spaceId?.name || null,
+                spaceName: booking.spaceId?.roomName || null,
                 eventDate: booking.eventDate,
                 startTime: booking.startTime,
                 endTime: booking.endTime,

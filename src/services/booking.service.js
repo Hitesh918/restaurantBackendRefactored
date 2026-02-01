@@ -2,9 +2,9 @@ const BaseError = require('../errors/base.error');
 
 class BookingService {
     constructor(
-        bookingRequestRepository, 
-        bookingMessageRepository, 
-        restaurantRepository, 
+        bookingRequestRepository,
+        bookingMessageRepository,
+        restaurantRepository,
         customerRepository,
         restaurantSpaceRepository,
         availabilityBlockRepository,
@@ -38,26 +38,69 @@ class BookingService {
         }
 
         // Validate space exists and belongs to restaurant
+        console.log('Space ID:', data.spaceId);
+        console.log('Restaurant ID from request:', data.restaurantId);
+
+        // The restaurantSpaceRepository.findById actually returns RestaurantRoom records
+        // This is by design in the current system
         const space = await this.restaurantSpaceRepository.findById(data.spaceId);
+        console.log('Found space/room:', space);
+
         if (!space) {
             throw new BaseError('Space not found', 404);
         }
-        if (space.restaurantId.toString() !== data.restaurantId) {
-            throw new BaseError('Space does not belong to this restaurant', 400);
+
+        // Check if this is actually a RestaurantRoom (has restaurantProfileId) or RestaurantSpace (has restaurantId)
+        let spaceRestaurantId;
+        let minCapacity, maxCapacity, allowedEventStyles;
+
+        if (space.restaurantProfileId) {
+            // This is a RestaurantRoom
+            console.log('Detected as RestaurantRoom');
+            if (!space.restaurantProfileId) {
+                throw new BaseError('Room has no restaurantProfileId', 400);
+            }
+            spaceRestaurantId = space.restaurantProfileId.toString();
+            console.log('Room restaurantProfileId:', spaceRestaurantId);
+
+            // Extract capacity from RestaurantRoom structure
+            minCapacity = Math.min(space.capacity?.seated?.min || 1, space.capacity?.standing?.min || 1);
+            maxCapacity = Math.max(space.capacity?.seated?.max || 50, space.capacity?.standing?.max || 50);
+            allowedEventStyles = ['seated', 'standing']; // Default for rooms
+        } else if (space.restaurantId) {
+            // This is a RestaurantSpace
+            console.log('Detected as RestaurantSpace');
+            spaceRestaurantId = space.restaurantId.toString();
+            console.log('Space restaurantId:', spaceRestaurantId);
+
+            // Use RestaurantSpace structure
+            minCapacity = space.minCapacity;
+            maxCapacity = space.maxCapacity;
+            allowedEventStyles = space.allowedEventStyles;
+        } else {
+            throw new BaseError('Space has neither restaurantId nor restaurantProfileId', 400);
+        }
+
+        // Convert request restaurant ID to string for comparison
+        const requestRestaurantId = data.restaurantId.toString();
+        console.log('Comparing:', spaceRestaurantId, 'vs', requestRestaurantId);
+
+        if (spaceRestaurantId !== requestRestaurantId) {
+            throw new BaseError(`Space does not belong to this restaurant. Space belongs to ${spaceRestaurantId}, request for ${requestRestaurantId}`, 400);
         }
 
         // Validate guest count within capacity
-        if (data.guestCount < space.minCapacity || data.guestCount > space.maxCapacity) {
+        if (data.guestCount < minCapacity || data.guestCount > maxCapacity) {
             throw new BaseError(
-                `Guest count must be between ${space.minCapacity} and ${space.maxCapacity}`,
+                `Guest count must be between ${minCapacity} and ${maxCapacity}`,
                 400
             );
         }
 
         // Validate event style is allowed
-        if (!space.allowedEventStyles.includes(data.eventStyle)) {
+        if (!allowedEventStyles.includes(data.eventStyle)) {
             throw new BaseError(
-                `Event style '${data.eventStyle}' not allowed. Allowed: ${space.allowedEventStyles.join(', ')}`,
+                `Event style '${data.eventStyle}' not allowed. Allowed: ${allowedEventStyles.join(', ')}`,
                 400
             );
         }
@@ -118,7 +161,7 @@ class BookingService {
 
         // Resolve senderUserId from booking based on senderType
         let senderUserId;
-        
+
         if (data.senderType === 'customer') {
             const customerId = booking.customerId?._id || booking.customerId;
             const customer = await this.customerRepository.findById(customerId);
@@ -168,8 +211,8 @@ class BookingService {
         }
 
         // Get the restaurantId from the booking (handle populated vs non-populated)
-        const bookingRestaurantId = booking.restaurantId?._id 
-            ? booking.restaurantId._id.toString() 
+        const bookingRestaurantId = booking.restaurantId?._id
+            ? booking.restaurantId._id.toString()
             : booking.restaurantId?.toString();
 
         const inputRestaurantId = data.restaurantId.toString();
@@ -204,7 +247,7 @@ class BookingService {
 
     async _approveBooking(booking, notes) {
         const bookingRequestId = booking._id;
-        
+
         // Handle populated vs non-populated references
         const spaceId = booking.spaceId?._id || booking.spaceId;
         const restaurantId = booking.restaurantId?._id || booking.restaurantId;

@@ -51,7 +51,11 @@ class AvailabilityBlockRepository {
 
     async findByRestaurantId(restaurantId) {
         return await AvailabilityBlock.find({ restaurantId })
-            .populate('spaceId', 'name')
+            .populate({
+                path: 'spaceId',
+                model: 'RestaurantRoom',
+                select: 'roomName roomType capacity description'
+            })
             .sort({ eventDate: 1, startTime: 1 });
     }
 
@@ -64,7 +68,11 @@ class AvailabilityBlockRepository {
         return await AvailabilityBlock.find({
             restaurantId,
             eventDate: { $gte: dateFrom, $lte: dateTo }
-        }).populate('spaceId', 'name');
+        }).populate({
+            path: 'spaceId',
+            model: 'RestaurantRoom',
+            select: 'roomName roomType capacity description'
+        });
     }
 
     async getBlockedSpaceIds(eventDate, startTime, endTime, bufferMinutes = 30) {
