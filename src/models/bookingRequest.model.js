@@ -14,6 +14,12 @@ const bookingRequestSchema = new mongoose.Schema(
       required: true,
     },
 
+    restaurantProfileId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "RestaurantProfile",
+      required: false, // Optional for backward compatibility
+    },
+
     spaceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "RestaurantSpace",

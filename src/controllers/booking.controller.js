@@ -1,8 +1,8 @@
 const { BookingService } = require('../services');
-const { 
-    BookingRequestRepository, 
-    BookingMessageRepository, 
-    RestaurantRepository, 
+const {
+    BookingRequestRepository,
+    BookingMessageRepository,
+    RestaurantRepository,
     CustomerRepository,
     RestaurantSpaceRepository,
     AvailabilityBlockRepository,
@@ -21,7 +21,6 @@ const bookingService = new BookingService(
     new EventRepository()
 );
 
-const restaurantRepository = new RestaurantRepository();
 const restaurantProfileRepository = new RestaurantProfileRepository();
 
 async function createBookingRequest(req, res, next) {
@@ -31,7 +30,7 @@ async function createBookingRequest(req, res, next) {
         if (req.user && req.user.role === 'Customer') {
             req.body.customerId = req.user.id; // id is customerId for Customer role
         }
-        
+
         const result = await bookingService.createBookingRequest(req.body);
         return res.status(StatusCodes.CREATED).json({
             success: true,
@@ -122,7 +121,9 @@ async function getBookingsByRestaurant(req, res, next) {
 async function getBookingsByCustomer(req, res, next) {
     try {
         const { customerId } = req.params;
+        console.log('Getting bookings for customer:', customerId);
         const bookings = await bookingService.getBookingsByCustomer(customerId);
+        console.log('Customer bookings result:', JSON.stringify(bookings, null, 2));
         return res.status(StatusCodes.OK).json({
             success: true,
             message: 'Bookings fetched successfully',
@@ -140,9 +141,9 @@ async function getBookingsByCustomer(req, res, next) {
  */
 async function getMyBookings(req, res, next) {
     try {
-        // First, find the restaurant profile by userId
+        // Find the restaurant profile by userId
         const restaurantProfile = await restaurantProfileRepository.findByUserId(req.user.userId || req.user.id);
-        
+
         if (!restaurantProfile) {
             return res.status(StatusCodes.NOT_FOUND).json({
                 success: false,
@@ -152,31 +153,7 @@ async function getMyBookings(req, res, next) {
             });
         }
 
-        // Then find the restaurant record by restaurantProfileId
-        let restaurant = await restaurantRepository.findOne({ restaurantProfileId: restaurantProfile._id });
-        
-        // If no restaurant found by profile ID, try to find by userId (fallback for legacy data)
-        if (!restaurant) {
-            restaurant = await restaurantRepository.findByUserId(req.user.userId || req.user.id);
-            
-            // If we found a restaurant by userId but it's not linked to the profile, link them
-            if (restaurant && !restaurant.restaurantProfileId) {
-                await restaurantRepository.updateById(restaurant._id, {
-                    restaurantProfileId: restaurantProfile._id
-                });
-            }
-        }
-        
-        if (!restaurant) {
-            return res.status(StatusCodes.NOT_FOUND).json({
-                success: false,
-                message: 'No restaurant record found for this user. Please contact support.',
-                error: {},
-                data: null
-            });
-        }
-
-        const bookings = await bookingService.getBookingsByRestaurant(restaurant._id);
+        const bookings = await bookingService.getBookingsByRestaurantProfile(restaurantProfile._id);
         return res.status(StatusCodes.OK).json({
             success: true,
             message: 'Bookings fetched successfully',
@@ -194,34 +171,44 @@ async function getMyBookings(req, res, next) {
  */
 async function getMyBookingById(req, res, next) {
     try {
-        // Get restaurant - try userId first (for new tokens), then try id as restaurant._id (for old tokens)
-        let restaurant = null;
-        if (req.user.userId) {
-            restaurant = await restaurantRepository.findByUserId(req.user.userId);
-        }
-        
-        // Fallback: if not found and we have id, try finding restaurant by _id (for backward compatibility)
-        if (!restaurant && req.user.id) {
-            restaurant = await restaurantRepository.findById(req.user.id);
-        }
-        
-        if (!restaurant) {
+        // Find the restaurant profile by userId
+        const restaurantProfile = await restaurantProfileRepository.findByUserId(req.user.userId || req.user.id);
+
+        if (!restaurantProfile) {
             return res.status(StatusCodes.NOT_FOUND).json({
                 success: false,
-                message: 'Restaurant not found for this user',
+                message: 'Restaurant profile not found for this user',
                 error: {},
                 data: null
             });
         }
 
         const booking = await bookingService.getBookingById(req.params.bookingRequestId);
-        
-        // Verify booking belongs to restaurant
-        const bookingRestaurantId = booking.restaurantId?._id 
-            ? booking.restaurantId._id.toString() 
-            : booking.restaurantId?.toString();
-        
-        if (bookingRestaurantId !== restaurant._id.toString()) {
+
+        // Verify booking belongs to restaurant profile (check both restaurantProfileId and restaurantId)
+        let authorized = false;
+
+        // Check if booking has restaurantProfileId (new bookings)
+        if (booking.restaurantProfileId) {
+            const bookingRestaurantProfileId = booking.restaurantProfileId?._id
+                ? booking.restaurantProfileId._id.toString()
+                : booking.restaurantProfileId?.toString();
+            authorized = bookingRestaurantProfileId === restaurantProfile._id.toString();
+        } else if (booking.restaurantId) {
+            // Check if booking's restaurantId belongs to this profile (legacy bookings)
+            const { RestaurantRepository } = require('../repositories');
+            const restaurantRepository = new RestaurantRepository();
+            const restaurant = await restaurantRepository.findOne({ restaurantProfileId: restaurantProfile._id });
+
+            if (restaurant) {
+                const bookingRestaurantId = booking.restaurantId?._id
+                    ? booking.restaurantId._id.toString()
+                    : booking.restaurantId?.toString();
+                authorized = bookingRestaurantId === restaurant._id.toString();
+            }
+        }
+
+        if (!authorized) {
             return res.status(StatusCodes.FORBIDDEN).json({
                 success: false,
                 message: 'You do not have permission to view this booking',
@@ -243,13 +230,13 @@ async function getMyBookingById(req, res, next) {
 
 /**
  * POST /restaurant/bookings/:bookingRequestId/decision
- * Make decision on booking (approve/reject) - restaurantId auto-set from logged-in user
+ * Make decision on booking (approve/reject) - restaurantProfileId auto-set from logged-in user
  */
 async function makeMyDecision(req, res, next) {
     try {
-        // First, find the restaurant profile by userId
+        // Find the restaurant profile by userId
         const restaurantProfile = await restaurantProfileRepository.findByUserId(req.user.userId || req.user.id);
-        
+
         if (!restaurantProfile) {
             return res.status(StatusCodes.NOT_FOUND).json({
                 success: false,
@@ -259,33 +246,13 @@ async function makeMyDecision(req, res, next) {
             });
         }
 
-        // Then find the restaurant record by restaurantProfileId
-        let restaurant = await restaurantRepository.findOne({ restaurantProfileId: restaurantProfile._id });
-        
-        // If no restaurant found by profile ID, try to find by userId (fallback for legacy data)
-        if (!restaurant) {
-            restaurant = await restaurantRepository.findByUserId(req.user.userId || req.user.id);
-            
-            // If we found a restaurant by userId but it's not linked to the profile, link them
-            if (restaurant && !restaurant.restaurantProfileId) {
-                await restaurantRepository.updateById(restaurant._id, {
-                    restaurantProfileId: restaurantProfile._id
-                });
-            }
-        }
-        
-        if (!restaurant) {
-            return res.status(StatusCodes.NOT_FOUND).json({
-                success: false,
-                message: 'No restaurant record found for this user. Please contact support.',
-                error: {},
-                data: null
-            });
-        }
+        // Set restaurantProfileId from logged-in user
+        req.body.restaurantProfileId = restaurantProfile._id.toString();
 
-        // Set restaurantId from logged-in user
-        req.body.restaurantId = restaurant._id.toString();
-        
+        console.log('Making decision for booking:', req.params.bookingRequestId);
+        console.log('Restaurant profile ID:', restaurantProfile._id.toString());
+        console.log('Decision data:', req.body);
+
         const result = await bookingService.makeDecision(req.params.bookingRequestId, req.body);
         return res.status(StatusCodes.OK).json({
             success: true,

@@ -52,6 +52,7 @@ class BookingService {
 
         // Check if this is actually a RestaurantRoom (has restaurantProfileId) or RestaurantSpace (has restaurantId)
         let spaceRestaurantId;
+        let restaurantProfileId = null;
         let minCapacity, maxCapacity, allowedEventStyles;
 
         if (space.restaurantProfileId) {
@@ -61,6 +62,7 @@ class BookingService {
                 throw new BaseError('Room has no restaurantProfileId', 400);
             }
             spaceRestaurantId = space.restaurantProfileId.toString();
+            restaurantProfileId = space.restaurantProfileId.toString();
             console.log('Room restaurantProfileId:', spaceRestaurantId);
 
             // Extract capacity from RestaurantRoom structure
@@ -112,6 +114,7 @@ class BookingService {
         const bookingData = {
             customerId: data.customerId,
             restaurantId: data.restaurantId,
+            restaurantProfileId: restaurantProfileId, // Set if this is a RestaurantRoom booking
             spaceId: data.spaceId,
             eventDate: new Date(data.eventDate),
             startTime: data.startTime,
@@ -150,7 +153,7 @@ class BookingService {
      * senderType: 'customer' or 'restaurant' - resolved from booking
      */
     async sendMessage(bookingRequestId, data) {
-        const booking = await this.bookingRequestRepository.findById(bookingRequestId);
+        const booking = await this.bookingRequestRepository.findByIdRaw(bookingRequestId);
         if (!booking) {
             throw new BaseError('Booking request not found', 404);
         }
@@ -158,6 +161,11 @@ class BookingService {
         if (!data.senderType || !['customer', 'restaurant'].includes(data.senderType)) {
             throw new BaseError('senderType must be "customer" or "restaurant"', 400);
         }
+
+        console.log('Sending message for booking:', bookingRequestId);
+        console.log('Sender type:', data.senderType);
+        console.log('Booking restaurantId:', booking.restaurantId);
+        console.log('Booking restaurantProfileId:', booking.restaurantProfileId);
 
         // Resolve senderUserId from booking based on senderType
         let senderUserId;
@@ -170,12 +178,39 @@ class BookingService {
             }
             senderUserId = customer.userId;
         } else {
-            const restaurantId = booking.restaurantId?._id || booking.restaurantId;
-            const restaurant = await this.restaurantRepository.findById(restaurantId);
-            if (!restaurant) {
-                throw new BaseError('Restaurant not found', 404);
+            // For restaurant sender, we need to find the userId
+            // First try to get it from restaurantProfileId (new system)
+            
+            if (booking.restaurantProfileId) {
+                // New system: booking has restaurantProfileId
+                const { RestaurantProfile } = require('../models');
+                const restaurantProfile = await RestaurantProfile.findById(booking.restaurantProfileId).select('userId');
+                if (restaurantProfile) {
+                    senderUserId = restaurantProfile.userId;
+                }
+            } else if (booking.restaurantId) {
+                // Legacy system: booking has restaurantId
+                // First check if restaurantId is actually a restaurantProfileId
+                const { RestaurantProfile } = require('../models');
+                const restaurantProfile = await RestaurantProfile.findById(booking.restaurantId).select('userId');
+                
+                if (restaurantProfile) {
+                    // restaurantId was actually a restaurantProfileId
+                    senderUserId = restaurantProfile.userId;
+                } else {
+                    // restaurantId is a real Restaurant record
+                    const restaurant = await this.restaurantRepository.findById(booking.restaurantId);
+                    if (restaurant) {
+                        senderUserId = restaurant.userId;
+                    }
+                }
             }
-            senderUserId = restaurant.userId;
+            
+            if (!senderUserId) {
+                throw new BaseError('Restaurant not found for messaging', 404);
+            }
+            
+            console.log('Found restaurant sender userId:', senderUserId);
         }
 
         const message = await this.bookingMessageRepository.create({
@@ -197,27 +232,67 @@ class BookingService {
 
     /**
      * Restaurant approves or rejects a booking
-     * Uses restaurantId (from login) directly
+     * Uses restaurantId or restaurantProfileId (from login) directly
      */
     async makeDecision(bookingRequestId, data) {
-        const booking = await this.bookingRequestRepository.findById(bookingRequestId);
+        const booking = await this.bookingRequestRepository.findByIdRaw(bookingRequestId);
         if (!booking) {
             throw new BaseError('Booking request not found', 404);
         }
 
-        // Verify authorization using restaurantId from login
-        if (!data.restaurantId) {
-            throw new BaseError('restaurantId is required', 400);
+        // Verify authorization using restaurantId or restaurantProfileId from login
+        if (!data.restaurantId && !data.restaurantProfileId) {
+            throw new BaseError('restaurantId or restaurantProfileId is required', 400);
         }
 
-        // Get the restaurantId from the booking (handle populated vs non-populated)
-        const bookingRestaurantId = booking.restaurantId?._id
-            ? booking.restaurantId._id.toString()
-            : booking.restaurantId?.toString();
+        let authorized = false;
 
-        const inputRestaurantId = data.restaurantId.toString();
+        console.log('Authorization check:');
+        console.log('- Input restaurantProfileId:', data.restaurantProfileId);
+        console.log('- Input restaurantId:', data.restaurantId);
+        console.log('- Booking restaurantId:', booking.restaurantId);
+        console.log('- Booking restaurantProfileId:', booking.restaurantProfileId);
 
-        if (bookingRestaurantId !== inputRestaurantId) {
+        if (data.restaurantProfileId) {
+            // Check against restaurantProfileId (new bookings)
+            if (booking.restaurantProfileId) {
+                const bookingRestaurantProfileId = booking.restaurantProfileId?._id
+                    ? booking.restaurantProfileId._id.toString()
+                    : booking.restaurantProfileId?.toString();
+
+                const inputRestaurantProfileId = data.restaurantProfileId.toString();
+                authorized = bookingRestaurantProfileId === inputRestaurantProfileId;
+            } else if (booking.restaurantId) {
+                // Check if booking's restaurantId matches the restaurantProfileId directly (common case)
+                const bookingRestaurantId = booking.restaurantId?._id
+                    ? booking.restaurantId._id.toString()
+                    : booking.restaurantId?.toString();
+                
+                if (bookingRestaurantId === data.restaurantProfileId.toString()) {
+                    authorized = true;
+                    console.log('✓ Authorized: booking restaurantId matches restaurantProfileId');
+                } else {
+                    // Check if booking's restaurantId belongs to this profile (legacy bookings)
+                    const restaurant = await this.restaurantRepository.findOne({ restaurantProfileId: data.restaurantProfileId });
+                    if (restaurant) {
+                        authorized = bookingRestaurantId === restaurant._id.toString();
+                        console.log('✓ Authorized via restaurant lookup:', authorized);
+                    } else {
+                        console.log('✗ No restaurant found for profile');
+                    }
+                }
+            }
+        } else if (data.restaurantId) {
+            // Check against restaurantId (legacy)
+            const bookingRestaurantId = booking.restaurantId?._id
+                ? booking.restaurantId._id.toString()
+                : booking.restaurantId?.toString();
+
+            const inputRestaurantId = data.restaurantId.toString();
+            authorized = bookingRestaurantId === inputRestaurantId;
+        }
+
+        if (!authorized) {
             throw new BaseError('Unauthorized to make decision on this booking', 403);
         }
 
@@ -335,6 +410,10 @@ class BookingService {
 
     async getBookingsByRestaurant(restaurantId) {
         return await this.bookingRequestRepository.getGroupedByRestaurant(restaurantId);
+    }
+
+    async getBookingsByRestaurantProfile(restaurantProfileId) {
+        return await this.bookingRequestRepository.getGroupedByRestaurantProfile(restaurantProfileId);
     }
 
     async getBookingsByCustomer(customerId) {
