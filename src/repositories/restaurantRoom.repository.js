@@ -17,11 +17,11 @@ class RestaurantRoomRepository {
         }).sort({ createdAt: -1 });
     }
 
-    async updateById(id, updateData) {
+    async updateById(id, updateData, options = {}) {
         return await RestaurantRoom.findByIdAndUpdate(
             id,
             updateData,
-            { new: true, runValidators: true }
+            { new: true, runValidators: true, ...options }
         );
     }
 

@@ -6,16 +6,6 @@ class MenuManagementService {
         this.restaurantProfileRepository = restaurantProfileRepository;
     }
 
-    async getAllMenusForUser(userId) {
-        // Get user's restaurant profile
-        const profile = await this.restaurantProfileRepository.findByUserId(userId);
-        if (!profile) {
-            throw new BaseError('Restaurant profile not found', 404);
-        }
-
-        return await this.getAllMenusForProfile(profile._id);
-    }
-
     async getAllMenusForProfile(profileId) {
         // Get all rooms for this profile
         const rooms = await this.restaurantRoomRepository.findByProfileId(profileId);
@@ -44,16 +34,6 @@ class MenuManagementService {
         allMenus.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
         
         return allMenus;
-    }
-
-    async getMenuStatsForUser(userId) {
-        // Get user's restaurant profile
-        const profile = await this.restaurantProfileRepository.findByUserId(userId);
-        if (!profile) {
-            throw new BaseError('Restaurant profile not found', 404);
-        }
-
-        return await this.getMenuStatsForProfile(profile._id);
     }
 
     async getMenuStatsForProfile(profileId) {

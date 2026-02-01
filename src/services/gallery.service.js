@@ -6,16 +6,6 @@ class GalleryService {
         this.restaurantProfileRepository = restaurantProfileRepository;
     }
 
-    async getAllPhotosForUser(userId) {
-        // Get user's restaurant profile
-        const profile = await this.restaurantProfileRepository.findByUserId(userId);
-        if (!profile) {
-            throw new BaseError('Restaurant profile not found', 404);
-        }
-
-        return await this.getAllPhotosForProfile(profile._id);
-    }
-
     async getAllPhotosForProfile(profileId) {
         // Get all rooms for this profile
         const rooms = await this.restaurantRoomRepository.findByProfileId(profileId);
@@ -44,16 +34,6 @@ class GalleryService {
         allPhotos.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
         
         return allPhotos;
-    }
-
-    async getGalleryStatsForUser(userId) {
-        // Get user's restaurant profile
-        const profile = await this.restaurantProfileRepository.findByUserId(userId);
-        if (!profile) {
-            throw new BaseError('Restaurant profile not found', 404);
-        }
-
-        return await this.getGalleryStatsForProfile(profile._id);
     }
 
     async getGalleryStatsForProfile(profileId) {

@@ -1,14 +1,32 @@
 const { StatusCodes } = require('http-status-codes');
+const { RestaurantProfileRepository } = require('../repositories');
 
 class MenuManagementController {
     constructor(menuManagementService) {
         this.menuManagementService = menuManagementService;
+        this.restaurantProfileRepository = new RestaurantProfileRepository();
     }
 
     async getAllMenus(req, res, next) {
         try {
-            const userId = req.user.id;
-            const menus = await this.menuManagementService.getAllMenusForUser(userId);
+            // Use userId if available, fallback to id (same pattern as rooms and gallery)
+            const userId = req.user.userId || req.user.id;
+            console.log('Menu Management: Looking for restaurant profile with userId:', userId);
+            
+            // First find the restaurant profile for this user
+            const profile = await this.restaurantProfileRepository.findByUserId(userId);
+            console.log('Menu Management: Found profile:', profile ? profile._id : 'null');
+            
+            if (!profile) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    message: 'Restaurant profile not found for this user',
+                    error: {},
+                    data: null
+                });
+            }
+
+            const menus = await this.menuManagementService.getAllMenusForProfile(profile._id);
             
             res.status(StatusCodes.OK).json({
                 success: true,
@@ -21,8 +39,24 @@ class MenuManagementController {
 
     async getMenuStats(req, res, next) {
         try {
-            const userId = req.user.id;
-            const stats = await this.menuManagementService.getMenuStatsForUser(userId);
+            // Use userId if available, fallback to id (same pattern as rooms and gallery)
+            const userId = req.user.userId || req.user.id;
+            console.log('Menu Stats: Looking for restaurant profile with userId:', userId);
+            
+            // First find the restaurant profile for this user
+            const profile = await this.restaurantProfileRepository.findByUserId(userId);
+            console.log('Menu Stats: Found profile:', profile ? profile._id : 'null');
+            
+            if (!profile) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    message: 'Restaurant profile not found for this user',
+                    error: {},
+                    data: null
+                });
+            }
+
+            const stats = await this.menuManagementService.getMenuStatsForProfile(profile._id);
             
             res.status(StatusCodes.OK).json({
                 success: true,
