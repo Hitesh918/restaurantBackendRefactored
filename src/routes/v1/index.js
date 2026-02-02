@@ -21,6 +21,7 @@ const subscriptionRouter = require('./subscription.routes');
 const adminSubscriptionRouter = require('./admin-subscription.routes');
 const userRouter = require('./user.routes');
 const customerInquiryRouter = require('./customer-inquiry.routes');
+const pdrConsultationRouter = require('./pdr-consultation.routes');
 const inquiryRouter = require('./inquiry.routes');
 
 const v1Router = express.Router();
@@ -47,5 +48,6 @@ v1Router.use('/subscriptions', adminSubscriptionRouter);
 v1Router.use('/users', userRouter);
 v1Router.use('/customers', customerInquiryRouter);
 v1Router.use('/inquiries', inquiryRouter);
+v1Router.use('/pdr-consultations', pdrConsultationRouter);
 
 module.exports = v1Router;

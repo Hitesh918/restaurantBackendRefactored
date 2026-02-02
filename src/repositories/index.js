@@ -1,3 +1,5 @@
+const PDRConsultationRepository = require('./pdrConsultation.repository');
+
 module.exports = {
     PlanRepository: require('./plan.repository'),
     SubscriptionRepository: require('./subscription.repository'),

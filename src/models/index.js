@@ -16,5 +16,6 @@ module.exports = {
     Media: require('./media.model'),
     Cuisine: require('./cuisine.model'),
     Inquiry: require('./inquiry.model'),
-    SavedSpace: require('./savedSpace.model')
+    SavedSpace: require('./savedSpace.model'),
+    PDRConsultation: require('./pdrConsultation.model')
 }
