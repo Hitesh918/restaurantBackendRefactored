@@ -32,6 +32,19 @@ router.get('/customer/:customerId', authenticate, (req, res, next) =>
     pdrConsultationController.getConsultationsByCustomer(req, res, next)
 );
 
+// Restaurant routes (authenticated restaurant)
+router.get('/restaurant/leads', authenticate, authorize('Restaurant'), (req, res, next) => 
+    pdrConsultationController.getAllConsultations(req, res, next)
+);
+
+router.put('/restaurant/:id/status', authenticate, authorize('Restaurant'), (req, res, next) => 
+    pdrConsultationController.updateConsultationStatus(req, res, next)
+);
+
+router.put('/restaurant/:id/assign', authenticate, authorize('Restaurant'), (req, res, next) => 
+    pdrConsultationController.assignSpecialist(req, res, next)
+);
+
 // Admin routes (authenticated admin only)
 router.get('/', authenticate, authorize('Admin'), (req, res, next) => 
     pdrConsultationController.getAllConsultations(req, res, next)
