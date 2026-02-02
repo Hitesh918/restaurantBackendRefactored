@@ -1,5 +1,3 @@
-const PDRConsultationRepository = require('./pdrConsultation.repository');
-
 module.exports = {
     PlanRepository: require('./plan.repository'),
     SubscriptionRepository: require('./subscription.repository'),
@@ -15,5 +13,6 @@ module.exports = {
     AvailabilityBlockRepository: require('./availabilityBlock.repository'),
     EventRepository: require('./event.repository'),
     ReviewRepository: require('./review.repository'),
-    InquiryRepository: require('./inquiry.repository')
+    InquiryRepository: require('./inquiry.repository'),
+    PDRConsultationRepository: require('./pdrConsultation.repository')
 }
