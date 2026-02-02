@@ -17,5 +17,6 @@ module.exports = {
     GalleryController: require('./gallery.controller'),
     MenuManagementController: require('./menuManagement.controller'),
     MenuController: require('./menu.controller'),
-    CRMController: require('./crm.controller')
+    CRMController: require('./crm.controller'),
+    PDRConsultationController: require('./pdrConsultation.controller')
 }

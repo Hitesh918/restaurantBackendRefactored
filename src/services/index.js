@@ -13,5 +13,6 @@ module.exports = {
     EventService: require('./event.service'),
     CuisineService: require('./cuisine.service'),
     SpaceService: require('./space.service'),
-    UserService: require('./user.service')
+    UserService: require('./user.service'),
+    PDRConsultationService: require('./pdrConsultation.service')
 }
