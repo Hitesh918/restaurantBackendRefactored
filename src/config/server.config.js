@@ -24,5 +24,5 @@ module.exports = {
     ATLAS_DB_URL: process.env.ATLAS_DB_URL,
     JWT_SECRET: process.env.JWT_SECRET || 'default-secret-change-in-production-min-32-characters',
     NODE_ENV: process.env.NODE_ENV || "development",
-    BACKEND_BASE_URL: process.env.BACKEND_BASE_URL || `http://localhost:${process.env.PORT || 3000}`
+    BACKEND_BASE_URL: "https://restaurantbackendrefactored.onrender.com" || `http://localhost:${process.env.PORT || 3000}`
 }
